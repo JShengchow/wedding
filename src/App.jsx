@@ -12,6 +12,27 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { submitRsvp } from "./lib/supabase";
+import heroImage from "./assets/seekiss.png";
+
+const photoModules = import.meta.glob("./assets/*_1_105_c.jpeg", {
+  eager: true,
+  import: "default",
+});
+
+const localPhotos = Object.entries(photoModules)
+  .sort(([left], [right]) => left.localeCompare(right))
+  .map(([, src], index) => ({
+    src,
+    alt: `婚纱照 ${index + 1}`,
+  }));
+
+const storyPhoto = localPhotos[12]?.src || heroImage;
+const featurePhotos = [
+  localPhotos[4],
+  localPhotos[17],
+  localPhotos[28],
+  localPhotos[39],
+].filter(Boolean);
 
 function getSubmitErrorMessage(error) {
   const message = error?.message || "";
@@ -150,68 +171,95 @@ export default function WeddingInvitationH5() {
         <Music2 className={`w-5 h-5 ${musicPlaying ? "animate-spin" : ""}`} />
       </button>
 
-      <section className="relative h-screen overflow-hidden bg-[#b9c3a1]">
+      <section className="relative flex min-h-[100svh] overflow-hidden bg-[#b9c3a1]">
         <img
-          src="https://images.unsplash.com/photo-1520854221256-17451cc331bf?q=80&w=1600&auto=format&fit=crop"
-          alt="Wedding"
-          className="w-full h-full object-cover scale-105"
+          src={heroImage}
+          alt="陈晓琪与周健声婚纱照"
+          className="absolute inset-0 h-full w-full object-cover object-[48%_center] md:object-center"
         />
 
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-[#f7f5ef]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/5 to-[#f7f5ef]" />
+        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#f7f5ef] via-[#f7f5ef]/45 to-transparent" />
 
         <motion.div
           initial={{ opacity: 1, y: 0 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.2 }}
-          className="absolute top-16 left-0 right-0 text-center px-6"
+          className="relative z-10 flex min-h-[100svh] w-full flex-col items-center justify-between px-5 pb-10 pt-16 text-center md:px-10 md:pb-14"
         >
-          <p className="tracking-[0.35em] text-sm text-white/90 mb-4">
-            WEDDING PARTY
-          </p>
+          <div className="mx-auto w-full max-w-3xl text-white drop-shadow-md">
+            <p className="mb-4 text-xs tracking-[0.32em] text-white/90 md:text-sm">
+              WEDDING PARTY
+            </p>
 
-          <h1 className="text-5xl md:text-6xl italic text-white drop-shadow-md font-light">
-            We Are
-          </h1>
+            <p className="text-[clamp(2.5rem,13vw,5.5rem)] font-light italic leading-none">
+              We Are
+            </p>
 
-          <h2 className="text-6xl md:text-7xl text-white drop-shadow-md mt-2 font-light">
-            Getting Married
-          </h2>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 1, y: 0 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 1.2 }}
-          className="absolute bottom-20 left-1/2 -translate-x-1/2 text-center text-white px-6 w-full"
-        >
-          <p className="text-4xl tracking-wider mb-4">陈晓琪 & 周健声</p>
-          <p className="text-lg tracking-[0.25em]">2025.07.18 · 15:00</p>
+            <p className="mx-auto mt-3 flex max-w-[92vw] flex-col items-center text-[clamp(2.6rem,12vw,5.75rem)] font-light leading-[0.95] md:block">
+              <span>Getting</span>
+              <span className="md:ml-3">Married</span>
+            </p>
+          </div>
 
           <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ repeat: Infinity, duration: 2 }}
-            className="mt-10 flex justify-center"
+            initial={{ opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 1.2 }}
+            className="mx-auto flex w-full max-w-[min(92vw,720px)] flex-col items-center text-center text-[#687053] md:text-white md:drop-shadow-md"
           >
-            <ChevronDown className="w-8 h-8 opacity-80" />
+            <div className="flex w-full flex-col items-center text-center">
+              <p className="w-full text-center text-[clamp(2.35rem,12vw,5rem)] font-light leading-none">
+                陈晓琪
+              </p>
+              <div className="my-3 flex w-full items-center justify-center gap-4 text-sm tracking-[0.28em] text-[#929976] md:text-white/90">
+                <span className="h-px w-16 bg-current/45" />
+                <span>&amp;</span>
+                <span className="h-px w-16 bg-current/45" />
+              </div>
+              <p className="w-full text-center text-[clamp(2.35rem,12vw,5rem)] font-light leading-none">
+                周健声
+              </p>
+            </div>
+
+            <p className="mt-5 text-sm tracking-[0.22em] text-[#7f8766] md:text-lg md:text-white/95">
+              2025.07.18 · 15:00
+            </p>
+
+            <motion.div
+              animate={{ y: [0, 8, 0] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="mt-8 flex justify-center text-[#899169] md:text-white"
+            >
+              <ChevronDown className="h-7 w-7 opacity-80" />
+            </motion.div>
           </motion.div>
         </motion.div>
       </section>
 
-      <section className="px-6 -mt-10 relative z-10">
-        <div className="max-w-4xl mx-auto bg-white/75 backdrop-blur-xl rounded-[36px] shadow-2xl border border-white/60 p-8 grid grid-cols-3 gap-5 text-center">
+      <section className="relative z-10 -mt-8 px-5 md:-mt-10 md:px-6">
+        <div className="mx-auto grid max-w-4xl grid-cols-3 gap-3 rounded-3xl border border-white/70 bg-white/80 p-5 text-center shadow-2xl backdrop-blur-xl md:gap-5 md:rounded-[36px] md:p-8">
           <div>
-            <p className="text-4xl font-light">{countdown.days}</p>
-            <p className="text-xs tracking-[0.3em] mt-2">DAYS</p>
+            <p className="text-3xl font-light md:text-4xl">{countdown.days}</p>
+            <p className="mt-2 text-[0.65rem] tracking-[0.24em] md:text-xs md:tracking-[0.3em]">
+              DAYS
+            </p>
           </div>
 
           <div>
-            <p className="text-4xl font-light">{countdown.hours}</p>
-            <p className="text-xs tracking-[0.3em] mt-2">HOURS</p>
+            <p className="text-3xl font-light md:text-4xl">{countdown.hours}</p>
+            <p className="mt-2 text-[0.65rem] tracking-[0.24em] md:text-xs md:tracking-[0.3em]">
+              HOURS
+            </p>
           </div>
 
           <div>
-            <p className="text-4xl font-light">{countdown.minutes}</p>
-            <p className="text-xs tracking-[0.3em] mt-2">MINS</p>
+            <p className="text-3xl font-light md:text-4xl">
+              {countdown.minutes}
+            </p>
+            <p className="mt-2 text-[0.65rem] tracking-[0.24em] md:text-xs md:tracking-[0.3em]">
+              MINS
+            </p>
           </div>
         </div>
       </section>
@@ -232,7 +280,7 @@ export default function WeddingInvitationH5() {
       </section>
 
       <section className="px-5 pb-14">
-        <div className="max-w-5xl mx-auto mb-16 grid md:grid-cols-2 gap-6">
+        <div className="mx-auto mb-14 grid max-w-5xl gap-5 md:mb-16 md:grid-cols-2 md:gap-6">
           <div className="bg-white/75 backdrop-blur rounded-[32px] p-8 border border-white/60 shadow-lg">
             <p className="text-sm tracking-[0.3em] uppercase text-[#9aa182] mb-5">
               Our Story
@@ -248,13 +296,14 @@ export default function WeddingInvitationH5() {
             </p>
           </div>
 
-          <div
-            className="bg-[#cfd6b8] bg-cover bg-center rounded-[32px] min-h-[320px] shadow-lg"
-            style={{
-              backgroundImage:
-                "url('https://images.unsplash.com/photo-1522673607200-164d1b6ce486?q=80&w=1200&auto=format&fit=crop')",
-            }}
-          />
+          <div className="min-h-[320px] overflow-hidden rounded-[32px] bg-[#cfd6b8] shadow-lg md:min-h-[360px]">
+            <img
+              src={storyPhoto}
+              alt="我们的故事"
+              loading="lazy"
+              className="h-full w-full object-cover"
+            />
+          </div>
         </div>
 
         <div className="max-w-xl mx-auto bg-white/80 backdrop-blur rounded-[32px] shadow-sm border border-[#e7e4d9] p-8">
@@ -463,41 +512,55 @@ export default function WeddingInvitationH5() {
         </div>
       </section>
 
-      <section className="px-6 pb-20">
-        <div className="max-w-5xl mx-auto text-center mb-10">
+      {featurePhotos.length > 0 ? (
+        <section className="px-5 pb-16 md:px-6">
+          <div className="mx-auto grid max-w-5xl grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+            {featurePhotos.map((photo, index) => (
+              <div
+                key={photo.src}
+                className="overflow-hidden rounded-[24px] bg-[#dfe6d1] shadow-lg md:rounded-[28px]"
+              >
+                <img
+                  src={photo.src}
+                  alt={`精选婚纱照 ${index + 1}`}
+                  loading="lazy"
+                  className="aspect-[3/4] h-full w-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <section className="px-5 pb-20 md:px-6">
+        <div className="mx-auto mb-10 max-w-5xl text-center">
           <p className="text-sm tracking-[0.3em] uppercase text-[#9aa182] mb-4">
             Gallery
           </p>
 
-          <h3 className="text-4xl font-light">关于我们的浪漫瞬间</h3>
+          <h3 className="text-3xl font-light md:text-4xl">
+            关于我们的浪漫瞬间
+          </h3>
         </div>
 
-        <div className="max-w-5xl mx-auto grid grid-cols-2 gap-4">
-          <div
-            className="rounded-[28px] overflow-hidden shadow-xl aspect-[3/4] bg-[#cfd6b8] bg-cover bg-center"
-            style={{
-              backgroundImage:
-                "url('https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=1200&auto=format&fit=crop')",
-            }}
-          />
-
-          <div className="grid gap-4">
-            <div
-              className="rounded-[28px] overflow-hidden shadow-xl aspect-video bg-[#cfd6b8] bg-cover bg-center"
-              style={{
-                backgroundImage:
-                  "url('https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=1200&auto=format&fit=crop')",
-              }}
-            />
-
-            <div
-              className="rounded-[28px] overflow-hidden shadow-xl aspect-square bg-[#cfd6b8] bg-cover bg-center"
-              style={{
-                backgroundImage:
-                  "url('https://images.unsplash.com/photo-1529636798458-92182e662485?q=80&w=1200&auto=format&fit=crop')",
-              }}
-            />
-          </div>
+        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+          {localPhotos.slice(0, 30).map((photo, index) => (
+            <figure
+              key={photo.src}
+              className={`overflow-hidden rounded-[22px] bg-[#dfe6d1] shadow-lg md:rounded-[28px] ${
+                index % 7 === 0 ? "col-span-2 md:col-span-1" : ""
+              }`}
+            >
+              <img
+                src={photo.src}
+                alt={photo.alt}
+                loading="lazy"
+                className={`w-full object-cover ${
+                  index % 7 === 0 ? "aspect-[4/3] md:aspect-[3/4]" : "aspect-[3/4]"
+                }`}
+              />
+            </figure>
+          ))}
         </div>
       </section>
 
