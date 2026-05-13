@@ -1,0 +1,7 @@
+.git/
+.runtime/
+.vercel/
+dist/
+node_modules/
+src/assets/*.jpeg
+!src/assets/*_1_105_c.jpeg
