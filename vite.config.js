@@ -3,6 +3,10 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [react()],
+  server: {
+    port: 2026,
+    host: "0.0.0.0",
+  },
   build: {
     rollupOptions: {
       onwarn(warning, warn) {

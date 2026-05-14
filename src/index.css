@@ -1,11 +1,104 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Sans+SC:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;500;600&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  color-scheme: light;
+  --color-champagne: #c9a961;
+  --color-champagne-soft: #e6c77e;
+  --color-ivory: #faf7f0;
+  --color-blush: #f5d5d6;
+  --color-ink: #5c4a3f;
+}
+
 html {
   scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   margin: 0;
+  font-family:
+    "Noto Serif SC",
+    "Cormorant Garamond",
+    -apple-system,
+    BlinkMacSystemFont,
+    "PingFang SC",
+    "Microsoft YaHei",
+    sans-serif;
+  background: var(--color-ivory);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+@layer components {
+  .text-display {
+    font-family: "Cormorant Garamond", "Noto Serif SC", serif;
+    letter-spacing: 0.02em;
+  }
+
+  .text-eyebrow {
+    font-family: "Cormorant Garamond", serif;
+    text-transform: uppercase;
+    letter-spacing: 0.42em;
+    font-weight: 400;
+  }
+
+  .gold-divider {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--color-champagne);
+  }
+
+  .gold-divider::before,
+  .gold-divider::after {
+    content: "";
+    display: block;
+    width: 2.5rem;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba(201, 169, 97, 0.7),
+      transparent
+    );
+  }
+
+  .gold-line {
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba(201, 169, 97, 0.55),
+      transparent
+    );
+  }
+
+  .glass-card {
+    background: rgba(255, 252, 247, 0.78);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow:
+      0 30px 60px -32px rgba(176, 138, 71, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
+}
+
+@layer utilities {
+  .text-shadow-soft {
+    text-shadow: 0 2px 18px rgba(92, 74, 63, 0.18);
+  }
+
+  .ring-gold {
+    box-shadow: 0 0 0 1px rgba(201, 169, 97, 0.55);
+  }
+}
+
+::selection {
+  background: rgba(201, 169, 97, 0.35);
+  color: #3b2d15;
 }
