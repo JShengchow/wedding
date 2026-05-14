@@ -360,17 +360,19 @@ export default function WeddingInvitationH5() {
           >
             <SparkleStar className="mb-4 h-5 w-5 text-champagne-500 animate-shimmer" />
 
-            <div className="flex w-full flex-col items-center text-center text-ink">
-              <p className="text-display w-full text-[clamp(2.1rem,10.5vw,4.25rem)] font-light leading-none tracking-wide">
-                周 健 声
+            <div className="flex w-full items-center justify-center gap-3 text-ink md:gap-6">
+              <p className="text-display shrink-0 whitespace-nowrap text-[clamp(1.65rem,7.6vw,3.5rem)] font-light leading-none tracking-[0.08em]">
+                周健声
               </p>
-              <div className="my-4 flex w-full items-center justify-center gap-3 text-champagne-600">
-                <span className="h-px w-14 bg-gradient-to-r from-transparent via-champagne-400 to-transparent md:w-20" />
-                <span className="text-display text-lg italic md:text-2xl">&amp;</span>
-                <span className="h-px w-14 bg-gradient-to-r from-transparent via-champagne-400 to-transparent md:w-20" />
-              </div>
-              <p className="text-display w-full text-[clamp(2.1rem,10.5vw,4.25rem)] font-light leading-none tracking-wide">
-                陈 晓 琪
+              <span className="flex shrink-0 items-center gap-2 text-champagne-600 md:gap-3">
+                <span className="hidden h-px w-10 bg-gradient-to-r from-transparent via-champagne-400 to-transparent md:block md:w-16" />
+                <span className="text-display text-xl italic md:text-2xl">
+                  &amp;
+                </span>
+                <span className="hidden h-px w-10 bg-gradient-to-r from-transparent via-champagne-400 to-transparent md:block md:w-16" />
+              </span>
+              <p className="text-display shrink-0 whitespace-nowrap text-[clamp(1.65rem,7.6vw,3.5rem)] font-light leading-none tracking-[0.08em]">
+                陈晓琪
               </p>
             </div>
 
