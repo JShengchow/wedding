@@ -9,3 +9,4 @@ node_modules/
 npm-debug.log*
 src/assets/*.jpeg
 !src/assets/*_1_105_c.jpeg
+.claude/
