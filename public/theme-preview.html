@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wedding Theme Preview</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Allura&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,600&family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&family=Marcellus&family=Noto+Sans+SC:wght@400;500&family=Noto+Serif+SC:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f8f4ef;
+        --text: #352b25;
+        --muted: rgba(53, 43, 37, 0.68);
+        --card: rgba(255, 255, 255, 0.68);
+        --line: rgba(53, 43, 37, 0.16);
+        --accent: #c49a56;
+        --accent-strong: #9a7033;
+        --hero-filter: none;
+        --shadow: 0 24px 54px -34px rgba(0, 0, 0, 0.35);
+        --font-display: "Marcellus", "Noto Serif SC", serif;
+        --font-serif: "Cormorant Garamond", "Noto Serif SC", serif;
+        --font-body: "Noto Serif SC", "Noto Sans SC", sans-serif;
+        --title-tracking: 0.04em;
+        --caps-tracking: 0.36em;
+        --radius-xl: 28px;
+        --radius-lg: 22px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        font-family: var(--font-body);
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.65;
+        transition:
+          background 0.35s ease,
+          color 0.35s ease;
+      }
+
+      .bg-texture {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: -3;
+        background:
+          radial-gradient(
+            1000px 520px at 14% -8%,
+            color-mix(in oklab, var(--accent) 34%, transparent) 0%,
+            transparent 74%
+          ),
+          radial-gradient(
+            740px 520px at 94% 112%,
+            color-mix(in oklab, var(--accent) 28%, transparent) 0%,
+            transparent 80%
+          ),
+          var(--bg);
+      }
+
+      .grain {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: -2;
+        opacity: 0.2;
+        background-image: radial-gradient(
+          rgba(255, 255, 255, 0.2) 0.5px,
+          transparent 0.5px
+        );
+        background-size: 3px 3px;
+      }
+
+      .shell {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 30px clamp(16px, 2.6vw, 36px) 56px;
+      }
+
+      .control {
+        position: sticky;
+        top: 14px;
+        z-index: 40;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 14px;
+        align-items: center;
+        padding: 11px 14px;
+        border-radius: 999px;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--line);
+        background: color-mix(in oklab, var(--bg) 75%, transparent);
+        box-shadow: var(--shadow);
+        margin-bottom: 24px;
+      }
+
+      .control .label {
+        font-family: var(--font-serif);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        font-size: 11px;
+        color: var(--muted);
+        margin-left: 6px;
+      }
+
+      .seg {
+        display: inline-flex;
+        flex-wrap: wrap;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        padding: 4px;
+        gap: 4px;
+        background: color-mix(in oklab, var(--bg) 85%, transparent);
+      }
+
+      .seg-btn {
+        border: 0;
+        cursor: pointer;
+        border-radius: 999px;
+        padding: 10px 14px;
+        font: inherit;
+        font-size: 13px;
+        line-height: 1;
+        letter-spacing: 0.02em;
+        color: var(--muted);
+        background: transparent;
+        transition: all 0.22s ease;
+      }
+
+      .seg-btn.active {
+        color: #fff;
+        background: linear-gradient(
+          120deg,
+          color-mix(in oklab, var(--accent) 82%, #fff) 0%,
+          color-mix(in oklab, var(--accent-strong) 90%, #000) 100%
+        );
+        box-shadow: 0 8px 20px -12px color-mix(in oklab, var(--accent) 72%, black);
+      }
+
+      .meta {
+        font-size: 12px;
+        color: var(--muted);
+        letter-spacing: 0.05em;
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: var(--radius-xl);
+        min-height: min(84vh, 730px);
+        display: flex;
+        align-items: flex-end;
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+      }
+
+      .hero img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 43%;
+        filter: var(--hero-filter);
+        transform: scale(1.03);
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(
+            180deg,
+            color-mix(in oklab, #111 18%, transparent) 0%,
+            transparent 35%,
+            color-mix(in oklab, var(--bg) 72%, transparent) 100%
+          ),
+          radial-gradient(
+            circle at 74% 15%,
+            color-mix(in oklab, var(--accent) 24%, transparent) 0%,
+            transparent 45%
+          );
+      }
+
+      .hero-content {
+        position: relative;
+        z-index: 3;
+        width: min(720px, 100%);
+        margin: 0 auto;
+        text-align: center;
+        padding: clamp(28px, 4.8vw, 56px) 18px 46px;
+      }
+
+      .kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: var(--caps-tracking);
+        color: color-mix(in oklab, var(--text) 72%, #fff);
+      }
+
+      .kicker::before,
+      .kicker::after {
+        content: "";
+        width: 36px;
+        height: 1px;
+        background: linear-gradient(
+          to right,
+          transparent,
+          color-mix(in oklab, var(--accent) 72%, #fff),
+          transparent
+        );
+      }
+
+      .hero-title {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: clamp(42px, 9.4vw, 84px);
+        line-height: 0.96;
+        font-weight: 500;
+        letter-spacing: var(--title-tracking);
+        text-shadow: 0 4px 30px rgba(0, 0, 0, 0.14);
+      }
+
+      .hero-date {
+        margin: 14px auto 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        border-radius: 999px;
+        border: 1px solid color-mix(in oklab, var(--accent) 56%, #fff);
+        background: color-mix(in oklab, var(--bg) 76%, transparent);
+        color: color-mix(in oklab, var(--text) 85%, #fff);
+        font-size: 13px;
+        padding: 7px 15px;
+        box-shadow: 0 10px 20px -16px rgba(0, 0, 0, 0.35);
+      }
+
+      .hero-signature {
+        margin: 12px 0 0;
+        font-family: "Allura", cursive;
+        font-size: clamp(26px, 5.6vw, 44px);
+        color: color-mix(in oklab, var(--accent) 88%, #fff);
+      }
+
+      .grid {
+        display: grid;
+        gap: 14px;
+        margin-top: 14px;
+      }
+
+      @media (min-width: 840px) {
+        .grid {
+          grid-template-columns: 1.2fr 1fr;
+        }
+      }
+
+      .card {
+        position: relative;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--line);
+        background: var(--card);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .card-inner {
+        padding: clamp(20px, 3vw, 32px);
+      }
+
+      .section-kicker {
+        margin: 0 0 10px;
+        font-family: var(--font-serif);
+        text-transform: uppercase;
+        letter-spacing: 0.26em;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .section-title {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: clamp(26px, 3.6vw, 42px);
+        letter-spacing: 0.03em;
+      }
+
+      .section-copy {
+        margin: 14px 0 0;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.9;
+      }
+
+      .timeline {
+        margin-top: 16px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .timeline-item {
+        display: grid;
+        grid-template-columns: 64px 1fr;
+        gap: 12px;
+        align-items: baseline;
+      }
+
+      .timeline-time {
+        font-family: var(--font-display);
+        color: var(--accent-strong);
+        font-size: 27px;
+      }
+
+      .timeline-main {
+        border-left: 1px solid color-mix(in oklab, var(--accent) 42%, transparent);
+        padding-left: 12px;
+      }
+
+      .timeline-main h4 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .timeline-main p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .stats {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .stat {
+        border-radius: 16px;
+        border: 1px solid color-mix(in oklab, var(--accent) 26%, transparent);
+        background: color-mix(in oklab, var(--bg) 84%, transparent);
+        text-align: center;
+        padding: 11px 8px;
+      }
+
+      .stat .num {
+        font-family: var(--font-display);
+        font-size: 32px;
+        line-height: 1;
+        color: var(--accent-strong);
+      }
+
+      .stat .desc {
+        margin-top: 4px;
+        font-size: 11px;
+        letter-spacing: 0.2em;
+        color: var(--muted);
+      }
+
+      .preview-note {
+        margin-top: 18px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px dashed color-mix(in oklab, var(--accent) 48%, transparent);
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .preview-photo {
+        aspect-ratio: 3 / 4;
+        width: 100%;
+        object-fit: cover;
+        filter: var(--hero-filter);
+      }
+
+      .switch-tip {
+        margin-top: 16px;
+        text-align: center;
+        font-size: 12px;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+      }
+
+      .theme-bloom {
+        --bg: #f8f3f2;
+        --text: #3c2a31;
+        --muted: rgba(60, 42, 49, 0.7);
+        --card: rgba(255, 249, 250, 0.75);
+        --line: rgba(205, 151, 160, 0.27);
+        --accent: #d48d9a;
+        --accent-strong: #9d5a68;
+        --hero-filter: saturate(1.08) contrast(1.05);
+        --font-display: "Marcellus", "Noto Serif SC", serif;
+        --font-serif: "Cormorant Garamond", "Noto Serif SC", serif;
+        --font-body: "Noto Serif SC", "Noto Sans SC", sans-serif;
+      }
+
+      .theme-ink {
+        --bg: #f4f1e8;
+        --text: #2c2420;
+        --muted: rgba(44, 36, 32, 0.72);
+        --card: rgba(245, 240, 228, 0.82);
+        --line: rgba(99, 69, 55, 0.29);
+        --accent: #a53d2f;
+        --accent-strong: #7f2d22;
+        --hero-filter: saturate(0.7) contrast(1.12) sepia(0.16);
+        --font-display: "Cinzel", "Noto Serif SC", serif;
+        --font-serif: "Noto Serif SC", serif;
+        --font-body: "Noto Serif SC", "Noto Sans SC", sans-serif;
+        --title-tracking: 0.07em;
+      }
+
+      .theme-ink .hero::before {
+        background:
+          linear-gradient(
+            180deg,
+            rgba(6, 6, 6, 0.28) 0%,
+            rgba(6, 6, 6, 0) 35%,
+            color-mix(in oklab, var(--bg) 80%, transparent) 100%
+          ),
+          radial-gradient(circle at 78% 19%, rgba(165, 61, 47, 0.3), transparent 48%),
+          repeating-linear-gradient(
+            90deg,
+            transparent 0 28px,
+            rgba(100, 70, 54, 0.04) 28px 29px
+          );
+      }
+
+      .theme-ink .card {
+        border-radius: 12px;
+      }
+
+      .theme-ink .section-title {
+        writing-mode: horizontal-tb;
+        letter-spacing: 0.14em;
+      }
+
+      .theme-noir {
+        --bg: #111111;
+        --text: #f6f4ef;
+        --muted: rgba(246, 244, 239, 0.68);
+        --card: rgba(255, 255, 255, 0.03);
+        --line: rgba(246, 244, 239, 0.2);
+        --accent: #d5b078;
+        --accent-strong: #e3c08c;
+        --hero-filter: grayscale(0.26) contrast(1.12) brightness(0.9);
+        --font-display: "Bodoni Moda", "Noto Serif SC", serif;
+        --font-serif: "Italiana", "Noto Serif SC", serif;
+        --font-body: "Inter", "Noto Sans SC", sans-serif;
+        --radius-xl: 2px;
+        --radius-lg: 2px;
+      }
+
+      .theme-noir .bg-texture {
+        background:
+          linear-gradient(180deg, #0c0c0c 0%, #111 52%, #151515 100%),
+          var(--bg);
+      }
+
+      .theme-noir .grain {
+        opacity: 0.13;
+      }
+
+      .theme-noir .hero::before {
+        background:
+          linear-gradient(
+            180deg,
+            rgba(0, 0, 0, 0.58) 0%,
+            rgba(0, 0, 0, 0.16) 44%,
+            rgba(16, 16, 16, 0.88) 100%
+          ),
+          repeating-linear-gradient(
+            to right,
+            transparent 0 70px,
+            rgba(255, 255, 255, 0.04) 70px 71px
+          );
+      }
+
+      .theme-noir .hero-title {
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+
+      .theme-noir .section-kicker {
+        font-family: var(--font-body);
+        font-weight: 500;
+      }
+
+      .theme-noir .timeline-time {
+        font-size: 34px;
+      }
+
+      .theme-noir .stat {
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .theme-forest {
+        --bg: #f4f8f2;
+        --text: #243327;
+        --muted: rgba(36, 51, 39, 0.7);
+        --card: rgba(253, 255, 251, 0.78);
+        --line: rgba(101, 136, 104, 0.32);
+        --accent: #6e9969;
+        --accent-strong: #4f764a;
+        --hero-filter: saturate(0.9) contrast(1.06) brightness(0.96);
+        --font-display: "Cormorant Garamond", "Noto Serif SC", serif;
+        --font-serif: "Marcellus", "Noto Serif SC", serif;
+        --font-body: "Noto Serif SC", "Noto Sans SC", sans-serif;
+      }
+
+      .theme-forest .bg-texture {
+        background:
+          radial-gradient(
+            1000px 560px at 6% -10%,
+            rgba(126, 167, 110, 0.2) 0%,
+            transparent 72%
+          ),
+          radial-gradient(
+            760px 460px at 95% 100%,
+            rgba(188, 213, 176, 0.35) 0%,
+            transparent 78%
+          ),
+          linear-gradient(180deg, #f8fbf6 0%, #f0f7ed 100%);
+      }
+
+      .theme-forest .hero::before {
+        background:
+          linear-gradient(
+            180deg,
+            rgba(10, 33, 14, 0.22) 0%,
+            rgba(10, 33, 14, 0) 34%,
+            color-mix(in oklab, var(--bg) 78%, transparent) 100%
+          ),
+          radial-gradient(circle at 84% 18%, rgba(141, 184, 126, 0.35), transparent 44%);
+      }
+
+      .theme-forest .card {
+        border-radius: 18px;
+      }
+
+      .theme-forest .preview-note {
+        border-style: solid;
+        background: color-mix(in oklab, #fff 90%, var(--accent) 10%);
+      }
+
+      .theme-violet {
+        --bg: #f5efff;
+        --text: #312740;
+        --muted: rgba(49, 39, 64, 0.72);
+        --card: rgba(255, 251, 255, 0.76);
+        --line: rgba(145, 109, 203, 0.28);
+        --accent: #9d78d8;
+        --accent-strong: #6f4ba8;
+        --hero-filter: saturate(1.08) contrast(1.08) hue-rotate(6deg);
+        --font-display: "Bodoni Moda", "Noto Serif SC", serif;
+        --font-serif: "Cormorant Garamond", "Noto Serif SC", serif;
+        --font-body: "Noto Serif SC", "Noto Sans SC", sans-serif;
+      }
+
+      .theme-violet .bg-texture {
+        background:
+          radial-gradient(
+            860px 520px at 8% -8%,
+            rgba(156, 115, 226, 0.26) 0%,
+            transparent 72%
+          ),
+          radial-gradient(
+            920px 620px at 96% 108%,
+            rgba(195, 161, 245, 0.24) 0%,
+            transparent 76%
+          ),
+          linear-gradient(180deg, #f9f4ff 0%, #f4edff 100%);
+      }
+
+      .theme-violet .hero::before {
+        background:
+          linear-gradient(
+            180deg,
+            rgba(46, 22, 83, 0.28) 0%,
+            rgba(46, 22, 83, 0.04) 35%,
+            color-mix(in oklab, var(--bg) 80%, transparent) 100%
+          ),
+          radial-gradient(circle at 78% 20%, rgba(175, 130, 236, 0.46), transparent 48%);
+      }
+
+      .theme-violet .hero-signature {
+        color: color-mix(in oklab, var(--accent) 80%, #fdf8ff);
+      }
+
+      .theme-violet .stat {
+        background: color-mix(in oklab, #fff 82%, var(--accent) 18%);
+      }
+    </style>
+  </head>
+  <body class="theme-bloom">
+    <div class="bg-texture"></div>
+    <div class="grain"></div>
+    <main class="shell">
+      <div class="control">
+        <div class="label">One-click Theme Switch</div>
+        <div class="seg" role="tablist" aria-label="主题切换">
+          <button class="seg-btn active" data-theme="theme-bloom" role="tab">
+            Bloom 暮光烟粉
+          </button>
+          <button class="seg-btn" data-theme="theme-ink" role="tab">
+            Ink 墨韵东方
+          </button>
+          <button class="seg-btn" data-theme="theme-noir" role="tab">
+            Noir 杂志典雅
+          </button>
+          <button class="seg-btn" data-theme="theme-forest" role="tab">
+            Forest 白绿森系
+          </button>
+          <button class="seg-btn" data-theme="theme-violet" role="tab">
+            Violet 紫色梦境
+          </button>
+        </div>
+        <div class="meta" id="meta">浪漫现代 · 柔雾花园感</div>
+      </div>
+
+      <section class="hero">
+        <img src="/og.jpg" alt="婚礼封面预览图" />
+        <div class="hero-content">
+          <div class="kicker">The Wedding of</div>
+          <h1 class="hero-title">周健声 · 陈晓琪</h1>
+          <div class="hero-date">2026 年 7 月 18 日 · 周六 · 15:00</div>
+          <p class="hero-signature">We Are Getting Married</p>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <div class="card-inner">
+            <p class="section-kicker">Save the Date</p>
+            <h2 class="section-title">诚邀您莅临 · 共证幸福</h2>
+            <p class="section-copy">
+              盛夏将至，我们将在熟悉的城市，办一场温柔而隆重的婚礼。愿您拨冗莅临，与我们一同在这份美好里，留下值得珍藏的回忆。
+            </p>
+            <div class="stats">
+              <div class="stat">
+                <div class="num">64</div>
+                <div class="desc">DAYS</div>
+              </div>
+              <div class="stat">
+                <div class="num">16</div>
+                <div class="desc">HOURS</div>
+              </div>
+              <div class="stat">
+                <div class="num">09</div>
+                <div class="desc">MINS</div>
+              </div>
+            </div>
+            <div class="preview-note">
+              这是独立预览稿，重点演示：主题调性、信息层级、卡片样式、文本排版与一键切换体验。
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <img class="preview-photo" src="/og.jpg" alt="主题照片预览" />
+        </article>
+      </section>
+
+      <section class="grid" style="margin-top: 14px">
+        <article class="card">
+          <div class="card-inner">
+            <p class="section-kicker">Ceremony Details</p>
+            <h3 class="section-title">婚礼信息</h3>
+            <p class="section-copy">
+              地点：深礼堂 · 后海店<br />
+              地址：深圳市南山区南海大道 1090 号招商花园城 L5 层
+            </p>
+          </div>
+        </article>
+        <article class="card">
+          <div class="card-inner">
+            <p class="section-kicker">Wedding Schedule</p>
+            <h3 class="section-title">当日流程</h3>
+            <div class="timeline">
+              <div class="timeline-item">
+                <div class="timeline-time">14:30</div>
+                <div class="timeline-main">
+                  <h4>宾客签到</h4>
+                  <p>签到留念 · 入席候场</p>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-time">15:00</div>
+                <div class="timeline-main">
+                  <h4>婚礼仪式</h4>
+                  <p>证婚 · 交换戒指 · 互许诺言</p>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-time">17:30</div>
+                <div class="timeline-main">
+                  <h4>晚宴开席</h4>
+                  <p>举杯共贺 · 共享盛宴</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <p class="switch-tip">
+        可直接切换主题查看完整视觉差异，确认后我再把选中主题无缝集成到现有 React 页面。
+      </p>
+    </main>
+
+    <script>
+      const THEME_META = {
+        "theme-bloom": "浪漫现代 · 柔雾花园感",
+        "theme-ink": "东方雅致 · 水墨纸本感",
+        "theme-noir": "黑金杂志 · 高级时装感",
+        "theme-forest": "自然清新 · 白绿森系感",
+        "theme-violet": "柔雅梦幻 · 紫色夜幕感",
+      };
+
+      const buttons = Array.from(document.querySelectorAll(".seg-btn"));
+      const meta = document.getElementById("meta");
+
+      buttons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const nextTheme = btn.dataset.theme;
+          document.body.className = nextTheme;
+          buttons.forEach((item) => item.classList.remove("active"));
+          btn.classList.add("active");
+          meta.textContent = THEME_META[nextTheme];
+        });
+      });
+    </script>
+  </body>
+</html>
