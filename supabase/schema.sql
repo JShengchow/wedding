@@ -17,3 +17,24 @@ on public.wedding_rsvp
 for insert
 to anon
 with check (true);
+
+-- Length / enum guards are added as NOT VALID so existing rows that may not
+-- satisfy them (e.g. early test data with short phone numbers) are left
+-- untouched. Newly inserted or updated rows must satisfy the checks.
+-- After cleaning legacy rows you can promote each constraint with:
+--   alter table public.wedding_rsvp validate constraint <name>;
+alter table public.wedding_rsvp
+  drop constraint if exists wedding_rsvp_name_len,
+  drop constraint if exists wedding_rsvp_phone_len,
+  drop constraint if exists wedding_rsvp_message_len,
+  drop constraint if exists wedding_rsvp_guests_enum;
+
+alter table public.wedding_rsvp
+  add constraint wedding_rsvp_name_len
+    check (char_length(name) between 1 and 40) not valid,
+  add constraint wedding_rsvp_phone_len
+    check (char_length(phone) between 6 and 20) not valid,
+  add constraint wedding_rsvp_message_len
+    check (message is null or char_length(message) <= 500) not valid,
+  add constraint wedding_rsvp_guests_enum
+    check (guests in ('0', '1', '2', '3', '4+')) not valid;

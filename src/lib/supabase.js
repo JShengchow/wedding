@@ -26,7 +26,9 @@ export async function submitRsvp(form) {
   const supabase = await getSupabase();
 
   if (!supabase) {
-    const list = JSON.parse(window.localStorage.getItem("wedding-rsvp") || "[]");
+    const list = JSON.parse(
+      window.localStorage.getItem("wedding-rsvp") || "[]",
+    );
 
     list.push({
       ...form,
