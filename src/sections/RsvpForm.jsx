@@ -27,25 +27,31 @@ const GUEST_OPTIONS = [
 const SUBMIT_THROTTLE_MS = 10 * 1000;
 
 function getSubmitErrorMessage(error) {
-  const message = error?.message || "";
+  const code = error?.code || "";
 
-  if (/invalid api key/i.test(message)) {
-    return "提交失败：数据服务密钥无效，请联系新人确认 Supabase API key。";
+  switch (code) {
+    case "too_many_requests":
+      return "提交过于频繁，请稍候再试。";
+    case "bad_name":
+      return "请填写姓名（1 - 40 个字符）。";
+    case "bad_phone":
+      return "请填写有效的联系电话（6 - 20 位）。";
+    case "bad_attendance":
+      return "请选择出席状态。";
+    case "bad_guests":
+    case "bad_guests_for_absent":
+      return "请选择出席人数。";
+    case "bad_message":
+      return "留言长度请控制在 500 字以内。";
+    case "bad_body":
+      return "提交内容格式异常，请刷新后重试。";
+    case "network_error":
+      return "网络连接异常，已为您临时保存，稍后请再试。";
+    case "server_error":
+      return "服务暂时不可用，请稍后再试，或直接联系新人确认回执。";
+    default:
+      return "提交暂时失败，请稍后再试，或直接联系新人确认回执。";
   }
-
-  if (/row-level security|violates row-level security/i.test(message)) {
-    return "提交失败：数据库权限还未允许公开回执写入，请检查 Supabase RLS policy。";
-  }
-
-  if (/column .* does not exist|schema cache/i.test(message)) {
-    return "提交失败：数据库表字段和页面不一致，请检查 wedding_rsvp 表结构。";
-  }
-
-  if (/check constraint|violates check/i.test(message)) {
-    return "提交失败：内容超出限制，请检查姓名 / 手机号 / 留言长度。";
-  }
-
-  return "提交暂时失败，请稍后再试，或直接联系新人确认回执。";
 }
 
 export function RsvpForm() {

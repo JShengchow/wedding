@@ -16,6 +16,16 @@ export function Footer() {
         <p className="mt-6 text-[11px] tracking-[0.3em] text-ink-light">
           {COUPLE.groomEn} &amp; {COUPLE.brideEn} · 2026.07.18
         </p>
+        <p className="mt-4 text-[11px] tracking-wide text-ink-light">
+          <a
+            href="https://beian.miit.gov.cn/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition hover:text-champagne-600"
+          >
+            粤ICP备2026067284号
+          </a>
+        </p>
       </div>
     </footer>
   );

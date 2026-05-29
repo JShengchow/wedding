@@ -1,53 +1,80 @@
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabasePublishableKey =
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-  import.meta.env.VITE_SUPABASE_ANON_KEY;
+const RSVP_ENDPOINT =
+  import.meta.env.VITE_RSVP_ENDPOINT || "/api/rsvp";
 
-export const isSupabaseConfigured = Boolean(
-  supabaseUrl && supabasePublishableKey,
-);
+const LOCAL_STORAGE_KEY = "wedding-rsvp";
 
-let supabaseClient = null;
+export const isSupabaseConfigured = false;
 
-async function getSupabase() {
-  if (!isSupabaseConfigured) {
-    return null;
+class RsvpError extends Error {
+  constructor(code, status, message) {
+    super(message || code);
+    this.name = "RsvpError";
+    this.code = code;
+    this.status = status;
   }
-
-  if (!supabaseClient) {
-    const { createClient } = await import("@supabase/supabase-js");
-    supabaseClient = createClient(supabaseUrl, supabasePublishableKey);
-  }
-
-  return supabaseClient;
 }
 
-export async function submitRsvp(form) {
-  const supabase = await getSupabase();
-
-  if (!supabase) {
-    const list = JSON.parse(
-      window.localStorage.getItem("wedding-rsvp") || "[]",
-    );
-
-    list.push({
-      ...form,
-      createdAt: new Date().toISOString(),
-    });
-
-    window.localStorage.setItem("wedding-rsvp", JSON.stringify(list));
+function saveLocally(payload) {
+  if (typeof window === "undefined" || !window.localStorage) {
     return;
   }
 
-  const { error } = await supabase.from("wedding_rsvp").insert({
+  try {
+    const list = JSON.parse(
+      window.localStorage.getItem(LOCAL_STORAGE_KEY) || "[]",
+    );
+    list.push({ ...payload, createdAt: new Date().toISOString() });
+    window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
+  } catch {
+    // localStorage may be disabled (private mode, quota), ignore silently
+  }
+}
+
+async function parseError(res) {
+  let code = `http_${res.status}`;
+  try {
+    const data = await res.json();
+    if (data && typeof data.error === "string") {
+      code = data.error;
+    }
+  } catch {
+    // ignore non-JSON body
+  }
+  return new RsvpError(code, res.status, code);
+}
+
+export async function submitRsvp(form) {
+  const payload = {
     name: form.name,
     phone: form.phone,
     attendance: form.attendance,
     guests: form.guests,
     message: form.message || null,
-  });
+    hp: form.hp || "",
+  };
 
-  if (error) {
-    throw error;
+  let response;
+  try {
+    response = await fetch(RSVP_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch (networkErr) {
+    saveLocally(payload);
+    throw new RsvpError(
+      "network_error",
+      0,
+      networkErr?.message || "network_error",
+    );
+  }
+
+  if (!response.ok) {
+    const err = await parseError(response);
+    // Throttled requests are not "lost"; only persist genuine failures locally.
+    if (err.status !== 429) {
+      saveLocally(payload);
+    }
+    throw err;
   }
 }

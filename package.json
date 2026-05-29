@@ -9,12 +9,12 @@
     "deploy": "scripts/deploy.sh",
     "preview": "vite preview --host 0.0.0.0",
     "serve:dist": "vite preview --host 0.0.0.0 --port 4173",
+    "serve:api": "node server/index.mjs",
     "lint": "eslint src --ext .js,.jsx",
     "format": "prettier -w src",
     "optimize:images": "node scripts/optimize-images.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.105.4",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.16.0",
     "react": "^19.2.3",
