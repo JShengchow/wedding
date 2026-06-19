@@ -8,6 +8,7 @@
 - `story-01-open.webp`: “爱情与友情”模块右侧图片。
 - `lunbo-01.webp` 至 `lunbo-05.webp`: “浪漫瞬间”顶部轮播专用图。
 - `gallery-01.webp` 至 `gallery-24.webp`: “浪漫瞬间”、回忆曲线、旅行地图共用的相册图。
+- `travel-城市-序号.webp`: “Love Map”旅行地图专用图，例如 `travel-xiamen-01.webp`、`travel-xinjiang-10.webp`。
 - `feature-01.webp`、`feature-02.webp`: 四宫格精选区第 3、4 张专用图。
 
 四宫格精选区第 1、2 张复用 `gallery-05.webp`、`gallery-18.webp`。

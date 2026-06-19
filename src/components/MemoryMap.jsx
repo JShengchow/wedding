@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import chinaNationUrl from "cn-atlas/nation.json?url";
 import { Camera, Heart, MapPin, Navigation, Sparkles } from "lucide-react";
-import { galleryPhotos } from "../lib/photos";
+import { travelPhotos } from "../lib/photos";
 
 const MAP_W = 820;
 const MAP_H = 760;
@@ -17,8 +17,7 @@ const CITY_MEMORIES = [
     coords: [118.0894, 24.4798],
     offset: { x: 14, y: -8 },
     labelPoint: { x: 694, y: 392 },
-    photoIndex: 0,
-    photos: [0, 4, 8],
+    photoKey: "xiamen",
   },
   {
     city: "新疆",
@@ -29,8 +28,7 @@ const CITY_MEMORIES = [
     coords: [87.6168, 43.8256],
     offset: { x: -12, y: -6 },
     labelPoint: { x: 92, y: 160 },
-    photoIndex: 18,
-    photos: [18, 21, 23],
+    photoKey: "xinjiang",
   },
   {
     city: "汕头",
@@ -41,19 +39,7 @@ const CITY_MEMORIES = [
     coords: [116.6819, 23.3541],
     offset: { x: -18, y: 0 },
     labelPoint: { x: 706, y: 462 },
-    photoIndex: 2,
-    photos: [2, 6, 10],
-  },
-  {
-    city: "海陵岛",
-    province: "Yangjiang · Guangdong",
-    visitedAt: "2023.08",
-    note: "夏天被海浪推近",
-    desc: "阳江海边的八月很亮，我们把浪声、日落和笑声都留在相册里。",
-    coords: [111.93, 21.62],
-    labelPoint: { x: 430, y: 682 },
-    photoIndex: 3,
-    photos: [3, 7, 11],
+    photoKey: "shantou",
   },
   {
     city: "香港",
@@ -64,8 +50,7 @@ const CITY_MEMORIES = [
     coords: [114.1694, 22.3193],
     offset: { x: 26, y: 16 },
     labelPoint: { x: 700, y: 532 },
-    photoIndex: 5,
-    photos: [5, 9, 12],
+    photoKey: "hongkong",
   },
   {
     city: "长沙",
@@ -75,8 +60,7 @@ const CITY_MEMORIES = [
     desc: "奶茶、夜市和冬天的热气，都是我们收藏过的甜味坐标。",
     coords: [112.9388, 28.2282],
     labelPoint: { x: 690, y: 306 },
-    photoIndex: 8,
-    photos: [8, 13, 16],
+    photoKey: "changsha",
   },
   {
     city: "西安",
@@ -86,8 +70,7 @@ const CITY_MEMORIES = [
     desc: "钟声、灯火和长街，把普通的一晚变得很有纪念意义。",
     coords: [108.9398, 34.3416],
     labelPoint: { x: 116, y: 286 },
-    photoIndex: 10,
-    photos: [10, 14, 18],
+    photoKey: "xian",
   },
   {
     city: "贵州",
@@ -97,8 +80,7 @@ const CITY_MEMORIES = [
     desc: "把视线交给群山和云雾，也把赶路的日子过成一起冒险。",
     coords: [106.7135, 26.5783],
     labelPoint: { x: 126, y: 508 },
-    photoIndex: 12,
-    photos: [12, 15, 19],
+    photoKey: "guizhou",
   },
   {
     city: "成都",
@@ -108,8 +90,7 @@ const CITY_MEMORIES = [
     desc: "在成都的慢节奏里吃饭、散步、聊天，把赶路变成很舒服的日常。",
     coords: [104.0668, 30.5728],
     labelPoint: { x: 112, y: 392 },
-    photoIndex: 14,
-    photos: [14, 17, 20],
+    photoKey: "chengdu",
   },
   {
     city: "重庆",
@@ -119,8 +100,7 @@ const CITY_MEMORIES = [
     desc: "在重庆的坡道、江风和灯火里，热烈地记住了那几天。",
     coords: [106.5516, 29.563],
     labelPoint: { x: 124, y: 454 },
-    photoIndex: 15,
-    photos: [15, 18, 21],
+    photoKey: "chongqing",
   },
   {
     city: "惠州",
@@ -131,8 +111,7 @@ const CITY_MEMORIES = [
     coords: [114.4168, 23.1115],
     offset: { x: 18, y: -4 },
     labelPoint: { x: 604, y: 660 },
-    photoIndex: 16,
-    photos: [16, 20, 22],
+    photoKey: "huizhou",
   },
   {
     city: "深圳",
@@ -143,8 +122,7 @@ const CITY_MEMORIES = [
     coords: [114.0579, 22.5431],
     offset: { x: 34, y: 8 },
     labelPoint: { x: 720, y: 620 },
-    photoIndex: 22,
-    photos: [22, 23, 4],
+    photoKey: "shenzhen",
     isHome: true,
   },
 ];
@@ -270,9 +248,7 @@ function buildMapModel(chinaData) {
 export function MemoryMap() {
   const [mapModel, setMapModel] = useState(null);
   const [activeCityIndex, setActiveCityIndex] = useState(CITY_MEMORIES.length - 1);
-  const [activePhotoIndex, setActivePhotoIndex] = useState(
-    CITY_MEMORIES[CITY_MEMORIES.length - 1].photoIndex,
-  );
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -300,15 +276,12 @@ export function MemoryMap() {
     cityPoints[activeCityIndex] ||
     CITY_MEMORIES[activeCityIndex] ||
     CITY_MEMORIES[0];
-  const activePhoto = galleryPhotos[activePhotoIndex] || galleryPhotos[0];
-  const activePhotos = activeCity.photos
-    .map((photoIndex) => galleryPhotos[photoIndex])
-    .filter(Boolean);
+  const activePhotos = travelPhotos[activeCity.photoKey] || travelPhotos.xiamen;
+  const activePhoto = activePhotos[activePhotoIndex] || activePhotos[0];
 
   function handleSelectCity(index) {
-    const nextCity = CITY_MEMORIES[index] || CITY_MEMORIES[0];
     setActiveCityIndex(index);
-    setActivePhotoIndex(nextCity.photoIndex);
+    setActivePhotoIndex(0);
   }
 
   return (
@@ -319,7 +292,7 @@ export function MemoryMap() {
         </p>
         <p className="text-xl text-ink md:text-2xl">一起走过的中国</p>
         <p className="mx-auto max-w-xl text-sm leading-7 text-ink-soft md:text-base">
-          11 个旅行站点，最后回到深圳。点击城市或省份，查看那一站的照片与片段。
+          旅行坐标一路亮起，最后回到深圳。点击城市或省份，查看那一站的照片与片段。
         </p>
       </header>
 
@@ -338,7 +311,7 @@ export function MemoryMap() {
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <span className="inline-flex items-center gap-2 rounded-full border border-champagne-200/80 bg-white/75 px-3 py-1.5 text-[10px] tracking-[0.22em] text-champagne-700 backdrop-blur">
                 <Navigation className="h-3.5 w-3.5" />
-                11 STOPS · 1 HOME
+                TRAVEL STOPS · HOME
               </span>
               <span className="text-[11px] leading-5 text-ink-light">
                 周边标签 · 连线指引
@@ -521,7 +494,7 @@ export function MemoryMap() {
         <article className="overflow-hidden rounded-[28px] border border-champagne-200/70 bg-white/78 shadow-sm backdrop-blur">
           <figure className="relative aspect-[4/3] overflow-hidden bg-champagne-100">
             <img
-              key={`${activeCity.city}-${activePhotoIndex}`}
+              key={`${activeCity.city}-${activePhoto.src}`}
               src={activePhoto.src}
               alt={`${activePhoto.alt}，${activeCity.city}旅行回忆`}
               loading="lazy"
@@ -557,8 +530,8 @@ export function MemoryMap() {
                   {activeCity.note}
                 </p>
               </div>
-              <span className="text-display text-[34px] font-light leading-none text-champagne-300/80">
-                {String(activeCityIndex + 1).padStart(2, "0")}
+              <span className="rounded-full border border-champagne-200/80 bg-ivory-50 px-3 py-1 text-[10px] tracking-[0.22em] text-champagne-700">
+                {activeCity.isHome ? "HOME BASE" : "MEMORY STOP"}
               </span>
             </div>
 
@@ -571,13 +544,13 @@ export function MemoryMap() {
                 <button
                   key={`${activeCity.city}-thumb-${photo.src}`}
                   type="button"
-                  onClick={() => setActivePhotoIndex(activeCity.photos[index])}
+                  onClick={() => setActivePhotoIndex(index)}
                   className="group relative aspect-square overflow-hidden rounded-2xl border border-champagne-100 bg-champagne-100"
-                  aria-label={`查看 ${activeCity.city} 照片 ${index + 1}`}
+                  aria-label={`查看 ${activeCity.city} 的缩略照片`}
                 >
                   <img
                     src={photo.src}
-                    alt={`${photo.alt}，${activeCity.city}照片 ${index + 1}`}
+                    alt={`${photo.alt}，${activeCity.city}照片`}
                     loading="lazy"
                     decoding="async"
                     className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
@@ -603,10 +576,6 @@ export function MemoryMap() {
                   }`}
                 />
               ))}
-              <span className="ml-2 text-[11px] tracking-[0.18em] text-ink-light">
-                {String(activeCityIndex + 1).padStart(2, "0")} /{" "}
-                {String(CITY_MEMORIES.length).padStart(2, "0")}
-              </span>
             </div>
           </div>
         </article>
@@ -629,14 +598,15 @@ export function MemoryMap() {
         </div>
 
         <ol className="mt-5 grid gap-3 md:grid-cols-4">
-          {SHENZHEN_STORY.map((item, index) => (
+          {SHENZHEN_STORY.map((item) => (
             <li
               key={item.title}
               className="relative rounded-2xl border border-champagne-100/80 bg-white/65 p-4"
             >
-              <span className="text-display text-2xl leading-none text-champagne-300/85">
-                {String(index + 1).padStart(2, "0")}
-              </span>
+              <span
+                aria-hidden="true"
+                className="block h-1 w-8 rounded-full bg-gradient-to-r from-champagne-300 to-blush-300"
+              />
               <p className="mt-2 text-base text-ink">{item.title}</p>
               <p className="mt-1.5 text-xs leading-6 text-ink-light">{item.desc}</p>
             </li>

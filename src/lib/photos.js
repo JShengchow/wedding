@@ -90,6 +90,21 @@ const polaroidAssets = [
   { src: kapian03, name: "kapian-03" },
 ];
 const carouselAssets = [lunbo01, lunbo02, lunbo03, lunbo04, lunbo05];
+const travelPhotoModules = import.meta.glob("../assets/photos/travel-*.webp", {
+  eager: true,
+  import: "default",
+});
+
+function getTravelPhotoSrc(name) {
+  return travelPhotoModules[`../assets/photos/${name}.webp`];
+}
+
+function makeTravelPhotos(city, names) {
+  return names.map((name) => ({
+    src: getTravelPhotoSrc(name),
+    alt: `${city}旅行回忆 ${name.replace("travel-", "")}`,
+  }));
+}
 
 export const heroPhoto = hero01Cover;
 
@@ -119,3 +134,76 @@ export const galleryPhotos = galleryAssets.map((src, index) => ({
   src,
   alt: `婚纱照 ${index + 1}`,
 }));
+
+export const travelPhotos = {
+  xiamen: makeTravelPhotos("厦门", [
+    "travel-xiamen-01",
+    "travel-xiamen-02",
+    "travel-xiamen-03",
+    "travel-xiamen-04",
+    "travel-xiamen-05",
+    "travel-xiamen-06",
+  ]),
+  xinjiang: makeTravelPhotos("新疆", [
+    "travel-xinjiang-01",
+    "travel-xinjiang-02",
+    "travel-xinjiang-03",
+    "travel-xinjiang-04",
+    "travel-xinjiang-05",
+    "travel-xinjiang-06",
+    "travel-xinjiang-07",
+    "travel-xinjiang-08",
+    "travel-xinjiang-09",
+    "travel-xinjiang-10",
+  ]),
+  shantou: makeTravelPhotos("汕头", [
+    "travel-shantou-01",
+    "travel-shantou-02",
+    "travel-shantou-03",
+    "travel-shantou-04",
+  ]),
+  hongkong: makeTravelPhotos("香港", [
+    "travel-hongkong-01",
+    "travel-hongkong-02",
+    "travel-hongkong-03",
+    "travel-hongkong-04",
+  ]),
+  changsha: makeTravelPhotos("长沙", [
+    "travel-changsha-01",
+    "travel-changsha-02",
+    "travel-changsha-03",
+    "travel-changsha-04",
+  ]),
+  xian: makeTravelPhotos("西安", [
+    "travel-xian-01",
+    "travel-xian-02",
+    "travel-xian-03",
+    "travel-xian-04",
+  ]),
+  guizhou: makeTravelPhotos("贵州", [
+    "travel-guizhou-01",
+    "travel-guizhou-02",
+    "travel-guizhou-03",
+    "travel-guizhou-04",
+    "travel-guizhou-05",
+  ]),
+  chengdu: makeTravelPhotos("成都", ["travel-chengdu-01"]),
+  chongqing: makeTravelPhotos("重庆", [
+    "travel-chongqing-01",
+    "travel-chongqing-02",
+    "travel-chongqing-03",
+  ]),
+  huizhou: makeTravelPhotos("惠州", [
+    "travel-huizhou-01",
+    "travel-huizhou-02",
+    "travel-huizhou-03",
+    "travel-huizhou-04",
+    "travel-huizhou-05",
+  ]),
+  shenzhen: makeTravelPhotos("深圳", [
+    "travel-shenzhen-01",
+    "travel-shenzhen-02",
+    "travel-huizhou-04",
+    "travel-huizhou-05",
+  ]),
+};

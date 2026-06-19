@@ -518,7 +518,7 @@ export function Gallery() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-eyebrow text-[10px] text-champagne-600 md:text-[11px]">
-                  Love Map · 11 Stops + Home
+                  Love Map · Travel + Home
                 </p>
                 <p className="mt-1 text-sm text-ink md:text-[15px]">
                   {showMemoryWall
