@@ -10,7 +10,7 @@ export function Footer() {
       as="footer"
       variant="bloom"
       viewportAmount={0.4}
-      className="relative px-6 pb-14 text-center text-champagne-700"
+      className="relative px-6 pb-6 text-center text-champagne-700 md:pb-8"
     >
       <div className="mx-auto max-w-md">
         <motion.div variants={motionItem}>
@@ -42,7 +42,7 @@ export function Footer() {
         >
           {COUPLE.groomEn} &amp; {COUPLE.brideEn} · 2026.07.18
         </motion.p>
-        <p className="mt-4 text-[11px] tracking-wide text-ink-light">
+        <p className="mt-10 text-[11px] tracking-wide text-ink-light md:mt-12">
           <a
             href="https://beian.miit.gov.cn/"
             target="_blank"

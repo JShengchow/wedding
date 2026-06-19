@@ -1063,7 +1063,7 @@ body {
 }
 
 .floating-dock.side-right {
-  right: -214px;
+  right: -230px;
 }
 
 .floating-dock.side-right.is-open {
@@ -1071,7 +1071,7 @@ body {
 }
 
 .floating-dock.side-left {
-  left: -214px;
+  left: -230px;
 }
 
 .floating-dock.side-left.is-open {
@@ -1083,7 +1083,7 @@ body {
 }
 
 .floating-dock-panel {
-  width: 214px;
+  width: 230px;
   border-radius: 16px 0 0 16px;
   border: 1px solid rgb(var(--c-champagne-300) / 0.45);
   border-right: 0;
@@ -1146,10 +1146,12 @@ body {
 .floating-dock-label {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
   gap: 6px;
   color: rgb(var(--c-ink-soft) / 0.95);
   font-size: 12px;
   letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
 .floating-music-btn {
@@ -1176,15 +1178,14 @@ body {
 }
 
 .floating-dock-row-theme {
-  align-items: flex-start;
+  align-items: center;
 }
 
 .floating-theme-swatches {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
   gap: 6px;
-  max-width: 110px;
 }
 
 .floating-theme-swatch {
@@ -1204,15 +1205,15 @@ body {
 
 @media (max-width: 640px) {
   .floating-dock.side-right {
-    right: -194px;
+    right: -216px;
   }
 
   .floating-dock.side-left {
-    left: -194px;
+    left: -216px;
   }
 
   .floating-dock-panel {
-    width: 194px;
+    width: 216px;
     padding: 9px 8px 9px 10px;
   }
 
@@ -1226,7 +1227,4 @@ body {
     right: -34px;
   }
 
-  .floating-theme-swatches {
-    max-width: 98px;
-  }
 }

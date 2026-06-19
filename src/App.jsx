@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ThemeWheel } from "./components/ThemeWheel";
 import { Countdown } from "./sections/Countdown";
 import { Details } from "./sections/Details";
+import { DressCode } from "./sections/DressCode";
 import { FeaturePhotos } from "./sections/FeaturePhotos";
 import { Footer } from "./sections/Footer";
 import { Gallery } from "./sections/Gallery";
@@ -85,6 +86,7 @@ export default function WeddingInvitationH5() {
       <Schedule />
       <Vow />
       <RsvpForm />
+      <DressCode />
       <FeaturePhotos />
       <Gallery />
       <Footer />

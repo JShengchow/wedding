@@ -71,9 +71,9 @@ const galleryAssets = [
 ];
 
 const featureAssets = [
-  { src: features01, name: "features-01" },
-  { src: features02, name: "features-02" },
-  { src: features03, name: "features-03" },
+  { src: features02, name: "features-01" },
+  { src: features03, name: "features-02" },
+  { src: features01, name: "features-03" },
   { src: features04, name: "features-04" },
 ];
 const photoWallAssets = [
