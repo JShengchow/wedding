@@ -37,4 +37,4 @@ alter table public.wedding_rsvp
   add constraint wedding_rsvp_message_len
     check (message is null or char_length(message) <= 500) not valid,
   add constraint wedding_rsvp_guests_enum
-    check (guests in ('0', '1', '2', '3', '4+')) not valid;
+    check (guests in ('0', '1', '2', '3', '4', '5+')) not valid;

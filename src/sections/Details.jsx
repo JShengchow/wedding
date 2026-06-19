@@ -30,8 +30,8 @@ export function Details() {
             <DetailRow
               icon={<Clock3 className="h-5 w-5" />}
               label="Time"
-              title="下午 15:00"
-              subtitle="14:30 开始签到 入席"
+              title="仪式时间 16:30"
+              subtitle="15:10 起签到入园，可自由游园"
             />
 
             <div className="h-px gold-line" />

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { CalendarDays, ChevronDown } from "lucide-react";
-import { FloralSprig, SparkleStar } from "../components/decor";
+import { SparkleStar } from "../components/decor";
 import { heroPhoto } from "../lib/photos";
 import { COUPLE, WEDDING_DATE_LABEL } from "../content/wedding";
 
@@ -18,28 +18,25 @@ export function Hero() {
       <div className="absolute inset-0 bg-gradient-to-b from-[#1f1812]/35 via-[#1f1812]/10 to-ivory" />
       <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-ivory via-ivory/65 to-transparent" />
 
-      <FloralSprig className="absolute left-1/2 top-12 -translate-x-1/2 text-champagne-100/85 w-[260px] md:w-[340px]" />
-      <FloralSprig
-        flip
-        className="absolute left-1/2 top-[110px] -translate-x-1/2 text-champagne-100/60 w-[200px] md:w-[260px]"
-      />
-
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1.4, ease: "easeOut" }}
-        className="relative z-10 flex min-h-[100svh] w-full flex-col items-center justify-between px-5 pb-12 pt-24 text-center md:px-10 md:pb-16 md:pt-28"
+        className="relative z-10 flex min-h-[100svh] w-full flex-col items-center justify-between px-5 pb-12 pt-[max(3rem,env(safe-area-inset-top))] text-center md:px-10 md:pb-16 md:pt-28"
       >
-        <div className="mx-auto w-full max-w-3xl text-white drop-shadow">
-          <p className="text-eyebrow mb-3 text-[11px] text-white/90 md:text-xs">
-            The Wedding of
+        <div className="mx-auto flex w-full max-w-[min(94vw,980px)] flex-col items-center text-white drop-shadow-[0_6px_24px_rgba(31,24,18,0.38)]">
+          <div className="mb-3 flex w-full max-w-[360px] items-center justify-center gap-3 text-white/82 md:mb-5 md:max-w-[520px]">
+            <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/60 to-white/20" />
+            <span className="font-sans text-[10px] uppercase tracking-[0.42em] md:text-xs">
+              Z · C
+            </span>
+            <span className="h-px flex-1 bg-gradient-to-l from-transparent via-white/60 to-white/20" />
+          </div>
+          <p className="text-display whitespace-nowrap text-[clamp(1.75rem,7.4vw,5.8rem)] font-light italic leading-none tracking-[-0.045em] text-white/95 md:text-[clamp(4rem,7.6vw,6.8rem)]">
+            We Are Getting Married
           </p>
-          <p className="text-display text-[clamp(2.6rem,13vw,5.5rem)] font-light italic leading-none">
-            We Are
-          </p>
-          <p className="text-display mx-auto mt-2 flex max-w-[92vw] flex-col items-center text-[clamp(2.6rem,12vw,5.5rem)] font-light italic leading-[0.95] md:block">
-            <span>Getting</span>
-            <span className="md:ml-3">Married</span>
+          <p className="mt-3 font-sans text-[10px] uppercase tracking-[0.36em] text-white/76 md:mt-4 md:text-xs">
+            July Eighteenth · Shenzhen
           </p>
         </div>
 

@@ -21,7 +21,8 @@ const GUEST_OPTIONS = [
   { value: "1", label: "1 人" },
   { value: "2", label: "2 人" },
   { value: "3", label: "3 人" },
-  { value: "4+", label: "4 人及以上" },
+  { value: "4", label: "4 人" },
+  { value: "5+", label: "5 人及以上" },
 ];
 
 const SUBMIT_THROTTLE_MS = 10 * 1000;

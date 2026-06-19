@@ -53,7 +53,12 @@ export function ThemeWheel({ themes, activeTheme, onChange }) {
   }, [clampTop]);
 
   useEffect(() => {
-    setDockTop((current) => clampTop(current));
+    const frame = window.requestAnimationFrame(() => {
+      setDockTop((current) => clampTop(current));
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
   }, [open, clampTop]);
 
   useEffect(() => {

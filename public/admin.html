@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>回执管理 · RSVP</title>
+    <style>
+      :root {
+        --champagne: #b8895a;
+        --champagne-dark: #9a6f44;
+        --ink: #3a342e;
+        --ink-soft: #6b6157;
+        --ivory: #fbf7f0;
+        --line: #e7dccb;
+        --blush: #c98b86;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+        background: var(--ivory);
+        color: var(--ink);
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 24px 16px 64px;
+      }
+      header h1 {
+        font-size: 22px;
+        font-weight: 600;
+        margin: 8px 0 2px;
+        letter-spacing: 0.05em;
+      }
+      header p {
+        margin: 0;
+        color: var(--ink-soft);
+        font-size: 13px;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 8px 28px rgba(184, 137, 90, 0.08);
+      }
+      .login {
+        max-width: 380px;
+        margin: 12vh auto 0;
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        color: var(--ink-soft);
+        margin-bottom: 8px;
+      }
+      input[type="password"],
+      input[type="text"] {
+        width: 100%;
+        padding: 12px 14px;
+        font-size: 16px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      input:focus {
+        border-color: var(--champagne);
+      }
+      button {
+        cursor: pointer;
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        padding: 11px 18px;
+        transition: opacity 0.15s, transform 0.05s;
+      }
+      button:active {
+        transform: scale(0.98);
+      }
+      .btn-primary {
+        background: var(--champagne);
+        color: #fff;
+        width: 100%;
+        margin-top: 16px;
+        font-size: 16px;
+      }
+      .btn-primary:hover {
+        background: var(--champagne-dark);
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        margin: 18px 0;
+      }
+      .toolbar .spacer {
+        flex: 1;
+      }
+      .btn-ghost {
+        background: #fff;
+        color: var(--champagne-dark);
+        border: 1px solid var(--line);
+      }
+      .btn-ghost:hover {
+        border-color: var(--champagne);
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+      .stat {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 14px 12px;
+        text-align: center;
+      }
+      .stat .num {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--champagne-dark);
+      }
+      .stat .lbl {
+        font-size: 12px;
+        color: var(--ink-soft);
+        margin-top: 2px;
+      }
+      .table-scroll {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        white-space: nowrap;
+      }
+      th,
+      td {
+        padding: 11px 14px;
+        text-align: left;
+        border-bottom: 1px solid var(--line);
+      }
+      th {
+        background: #faf4ea;
+        font-weight: 600;
+        color: var(--ink-soft);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        position: sticky;
+        top: 0;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      td.msg {
+        white-space: normal;
+        min-width: 180px;
+        max-width: 320px;
+        color: var(--ink-soft);
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+      }
+      .pill.attend {
+        background: #eef6ec;
+        color: #4f7a43;
+      }
+      .pill.absent {
+        background: #f7ecec;
+        color: var(--blush);
+      }
+      .msg-box {
+        font-size: 13px;
+        color: var(--blush);
+        margin-top: 12px;
+        min-height: 18px;
+      }
+      .empty {
+        text-align: center;
+        color: var(--ink-soft);
+        padding: 40px 0;
+      }
+      .muted {
+        color: var(--ink-soft);
+        font-size: 12px;
+      }
+      @media (max-width: 560px) {
+        .stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <!-- 登录视图 -->
+      <section id="loginView" class="card login" hidden>
+        <header>
+          <h1>回执管理</h1>
+          <p>请输入管理口令</p>
+        </header>
+        <div style="margin-top: 18px">
+          <label for="token">管理口令</label>
+          <input
+            id="token"
+            type="password"
+            autocomplete="current-password"
+            placeholder="输入口令后回车"
+          />
+          <button class="btn-primary" id="loginBtn">进入</button>
+          <div class="msg-box" id="loginMsg"></div>
+        </div>
+      </section>
+
+      <!-- 数据视图 -->
+      <section id="dataView" hidden>
+        <header>
+          <h1>宾客回执</h1>
+          <p class="muted" id="updatedAt"></p>
+        </header>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="num" id="sTotal">0</div>
+            <div class="lbl">总回执</div>
+          </div>
+          <div class="stat">
+            <div class="num" id="sAttend">0</div>
+            <div class="lbl">出席</div>
+          </div>
+          <div class="stat">
+            <div class="num" id="sAbsent">0</div>
+            <div class="lbl">无法出席</div>
+          </div>
+          <div class="stat">
+            <div class="num" id="sHead">0</div>
+            <div class="lbl">预计人数</div>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <button class="btn-ghost" id="refreshBtn">刷新</button>
+          <button class="btn-ghost" id="csvBtn">下载 CSV</button>
+          <span class="spacer"></span>
+          <button class="btn-ghost" id="logoutBtn">退出</button>
+        </div>
+
+        <div class="msg-box" id="dataMsg"></div>
+
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>姓名</th>
+                <th>电话</th>
+                <th>出席</th>
+                <th>人数</th>
+                <th>留言</th>
+                <th>提交时间</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="emptyHint" hidden>暂无回执数据</div>
+      </section>
+    </div>
+
+    <script>
+      const TOKEN_KEY = "wedding-admin-token";
+      const $ = (id) => document.getElementById(id);
+
+      const guestLabel = {
+        0: "—",
+        1: "1 人",
+        2: "2 人",
+        3: "3 人",
+        4: "4 人",
+        "5+": "5 人及以上",
+        "4+": "4 人及以上",
+      };
+
+      function getToken() {
+        return localStorage.getItem(TOKEN_KEY) || "";
+      }
+      function setToken(t) {
+        localStorage.setItem(TOKEN_KEY, t);
+      }
+      function clearToken() {
+        localStorage.removeItem(TOKEN_KEY);
+      }
+
+      function showLogin(msg) {
+        $("dataView").hidden = true;
+        $("loginView").hidden = false;
+        $("loginMsg").textContent = msg || "";
+        $("token").focus();
+      }
+      function showData() {
+        $("loginView").hidden = true;
+        $("dataView").hidden = false;
+      }
+
+      function escapeHtml(s) {
+        return String(s == null ? "" : s).replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      }
+
+      async function loadData() {
+        const token = getToken();
+        if (!token) return showLogin();
+
+        $("dataMsg").textContent = "加载中…";
+        try {
+          const res = await fetch("/api/admin/rsvp", {
+            headers: { Authorization: "Bearer " + token },
+          });
+
+          if (res.status === 401) {
+            clearToken();
+            return showLogin("口令不正确，请重试");
+          }
+          if (res.status === 503) {
+            return showLogin("服务端未启用管理功能（缺少 admin-token）");
+          }
+          if (!res.ok) throw new Error("HTTP " + res.status);
+
+          const data = await res.json();
+          renderData(data);
+          showData();
+          $("dataMsg").textContent = "";
+        } catch (err) {
+          $("dataMsg").textContent = "加载失败：" + err.message;
+        }
+      }
+
+      function renderData(data) {
+        $("sTotal").textContent = data.count;
+        $("sAttend").textContent = data.attendingCount;
+        $("sAbsent").textContent = data.absentCount;
+        $("sHead").textContent = data.headcount;
+        $("updatedAt").textContent =
+          "更新于 " + new Date().toLocaleString("zh-CN");
+
+        const tbody = $("tbody");
+        tbody.innerHTML = "";
+        $("emptyHint").hidden = data.rows.length > 0;
+
+        for (const r of data.rows) {
+          const tr = document.createElement("tr");
+          const attend = r.attendance === "attend";
+          tr.innerHTML =
+            "<td>" +
+            r.id +
+            "</td><td>" +
+            escapeHtml(r.name) +
+            "</td><td>" +
+            escapeHtml(r.phone) +
+            '</td><td><span class="pill ' +
+            (attend ? "attend" : "absent") +
+            '">' +
+            (attend ? "出席" : "缺席") +
+            "</span></td><td>" +
+            (guestLabel[r.guests] || escapeHtml(r.guests)) +
+            '</td><td class="msg">' +
+            escapeHtml(r.message || "") +
+            "</td><td>" +
+            escapeHtml((r.created_at || "").replace("T", " ").slice(0, 16)) +
+            "</td>";
+          tbody.appendChild(tr);
+        }
+      }
+
+      async function downloadCsv() {
+        const token = getToken();
+        if (!token) return showLogin();
+        $("dataMsg").textContent = "正在生成 CSV…";
+        try {
+          const res = await fetch("/api/admin/rsvp.csv", {
+            headers: { Authorization: "Bearer " + token },
+          });
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          const today = new Date().toISOString().slice(0, 10);
+          a.download = "wedding-rsvp-" + today + ".csv";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+          $("dataMsg").textContent = "";
+        } catch (err) {
+          $("dataMsg").textContent = "下载失败：" + err.message;
+        }
+      }
+
+      function doLogin() {
+        const t = $("token").value.trim();
+        if (!t) {
+          $("loginMsg").textContent = "请输入口令";
+          return;
+        }
+        setToken(t);
+        $("token").value = "";
+        loadData();
+      }
+
+      $("loginBtn").addEventListener("click", doLogin);
+      $("token").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") doLogin();
+      });
+      $("refreshBtn").addEventListener("click", loadData);
+      $("csvBtn").addEventListener("click", downloadCsv);
+      $("logoutBtn").addEventListener("click", () => {
+        clearToken();
+        showLogin("已退出");
+      });
+
+      // 启动：有口令就直接尝试加载，否则显示登录
+      if (getToken()) {
+        loadData();
+      } else {
+        showLogin();
+      }
+    </script>
+  </body>
+</html>

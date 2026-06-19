@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { CalendarHeart, Heart, Sparkles } from "lucide-react";
 import { galleryPhotos } from "../lib/photos";
 
@@ -168,9 +168,10 @@ export function MemoryCurve() {
 
   const pathD = useMemo(() => buildCurvePath(positions), [positions]);
 
-  useEffect(() => {
+  function handleSelectYear(year) {
+    setActiveYear(year);
     setActiveMomentIndex(0);
-  }, [activeYear]);
+  }
 
   const activeMoment = chapter.moments[activeMomentIndex] || chapter.moments[0];
   const activePhoto =
@@ -203,7 +204,7 @@ export function MemoryCurve() {
 
                 <button
                   type="button"
-                  onClick={() => setActiveYear(item.year)}
+                  onClick={() => handleSelectYear(item.year)}
                   aria-pressed={isActive}
                   aria-label={`查看 ${item.year} 年 ${item.title} 的回忆曲线`}
                   className="memory-year-button"

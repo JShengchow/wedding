@@ -2,6 +2,7 @@ import express from "express";
 import Database from "better-sqlite3";
 import path from "node:path";
 import fs from "node:fs";
+import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -23,7 +24,7 @@ db.exec(`
     name        TEXT    NOT NULL,
     phone       TEXT    NOT NULL,
     attendance  TEXT    NOT NULL CHECK (attendance IN ('attend','absent')),
-    guests      TEXT    NOT NULL CHECK (guests IN ('0','1','2','3','4+')),
+    guests      TEXT    NOT NULL CHECK (guests IN ('0','1','2','3','4','5+','4+')),
     message     TEXT,
     ip          TEXT,
     ua          TEXT,
@@ -31,13 +32,116 @@ db.exec(`
   );
 `);
 
+function migrateGuestConstraintIfNeeded() {
+  const row = db
+    .prepare(
+      "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'wedding_rsvp'",
+    )
+    .get();
+  const tableSql = row?.sql || "";
+  if (tableSql.includes("'5+'")) return;
+
+  db.exec(`
+    BEGIN;
+    CREATE TABLE wedding_rsvp_next (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      name        TEXT    NOT NULL,
+      phone       TEXT    NOT NULL,
+      attendance  TEXT    NOT NULL CHECK (attendance IN ('attend','absent')),
+      guests      TEXT    NOT NULL CHECK (guests IN ('0','1','2','3','4','5+','4+')),
+      message     TEXT,
+      ip          TEXT,
+      ua          TEXT,
+      created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
+    INSERT INTO wedding_rsvp_next (
+      id, name, phone, attendance, guests, message, ip, ua, created_at
+    )
+      SELECT id, name, phone, attendance, guests, message, ip, ua, created_at
+      FROM wedding_rsvp;
+    DROP TABLE wedding_rsvp;
+    ALTER TABLE wedding_rsvp_next RENAME TO wedding_rsvp;
+    COMMIT;
+  `);
+}
+
+migrateGuestConstraintIfNeeded();
+
 const insertStmt = db.prepare(`
   INSERT INTO wedding_rsvp (name, phone, attendance, guests, message, ip, ua)
   VALUES (@name, @phone, @attendance, @guests, @message, @ip, @ua)
 `);
 
+const selectAllStmt = db.prepare(`
+  SELECT id, name, phone, attendance, guests, message, created_at
+  FROM wedding_rsvp
+  ORDER BY id DESC
+`);
+
+// Admin token is read from the ADMIN_TOKEN env var, or from a file at
+// data/admin-token (which lives outside the repo and is never overwritten by
+// deploys). When no token is configured the admin endpoints stay disabled.
+function loadAdminToken() {
+  if (process.env.ADMIN_TOKEN && process.env.ADMIN_TOKEN.trim()) {
+    return process.env.ADMIN_TOKEN.trim();
+  }
+  try {
+    const token = fs.readFileSync(path.join(DATA_DIR, "admin-token"), "utf8");
+    return token.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+const ADMIN_TOKEN = loadAdminToken();
+
+function isAdminAuthorized(req, res) {
+  if (!ADMIN_TOKEN) {
+    res.status(503).json({ error: "admin_disabled" });
+    return false;
+  }
+
+  const header = String(req.get("authorization") || "").replace(
+    /^Bearer\s+/i,
+    "",
+  );
+  const provided = header || String(req.query.token || "");
+
+  const a = Buffer.from(provided);
+  const b = Buffer.from(ADMIN_TOKEN);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    res.status(401).json({ error: "unauthorized" });
+    return false;
+  }
+
+  return true;
+}
+
+function toCsv(rows) {
+  const header = [
+    "id",
+    "name",
+    "phone",
+    "attendance",
+    "guests",
+    "message",
+    "created_at",
+  ];
+  const escape = (value) => {
+    if (value == null) return "";
+    const str = String(value);
+    return /[",\n\r]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+  };
+  const lines = [
+    header.join(","),
+    ...rows.map((row) => header.map((key) => escape(row[key])).join(",")),
+  ];
+  // Prepend a UTF-8 BOM so Excel opens Chinese characters without garbling.
+  return "\uFEFF" + lines.join("\r\n");
+}
+
 const ATTENDANCE_VALUES = new Set(["attend", "absent"]);
-const GUESTS_VALUES = new Set(["0", "1", "2", "3", "4+"]);
+const GUESTS_VALUES = new Set(["0", "1", "2", "3", "4", "5+"]);
 
 const SUBMIT_THROTTLE_MS = 5 * 1000;
 const lastIpSubmitAt = new Map();
@@ -136,6 +240,39 @@ app.post("/api/rsvp", (req, res) => {
   }
 });
 
+app.get("/api/admin/rsvp", (req, res) => {
+  if (!isAdminAuthorized(req, res)) return;
+
+  const rows = selectAllStmt.all();
+  const attending = rows.filter((r) => r.attendance === "attend");
+  const headcount = attending.reduce((sum, r) => {
+    const n =
+      r.guests === "5+" ? 5 : r.guests === "4+" ? 4 : Number(r.guests) || 0;
+    return sum + n;
+  }, 0);
+
+  res.json({
+    count: rows.length,
+    attendingCount: attending.length,
+    absentCount: rows.length - attending.length,
+    headcount,
+    rows,
+  });
+});
+
+app.get("/api/admin/rsvp.csv", (req, res) => {
+  if (!isAdminAuthorized(req, res)) return;
+
+  const rows = selectAllStmt.all();
+  const date = new Date().toISOString().slice(0, 10);
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="wedding-rsvp-${date}.csv"`,
+  );
+  res.send(toCsv(rows));
+});
+
 app.use((_req, res) => {
   res.status(404).json({ error: "not_found" });
 });
@@ -145,6 +282,7 @@ const host = process.env.HOST || "127.0.0.1";
 
 const server = app.listen(port, host, () => {
   console.log(`[rsvp] listening on ${host}:${port}, data dir: ${DATA_DIR}`);
+  console.log(`[rsvp] admin endpoints: ${ADMIN_TOKEN ? "enabled" : "disabled"}`);
 });
 
 function shutdown(signal) {

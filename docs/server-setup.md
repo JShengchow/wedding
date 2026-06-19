@@ -509,12 +509,43 @@ npm run deploy -- --skip-build
 - [ ] Node 只监听 `127.0.0.1`，不要去掉 `host` 参数
 - [ ] `/var/www/wedding/server/data/` 不在 rsync 同步范围之内
 - [ ] 自动备份 cron 已生效，且 `/var/backups/wedding/` 有定期文件
+- [ ] 管理页口令 `data/admin-token` 已设置且权限为 600
 
 ---
 
-## 10. 一些扩展能力（可选，按需做）
+## 10. 回执管理网页（已内置）
 
-- **简单看板**：写个 `GET /api/admin/rsvp?token=xxx` 接口（加一个静态 token），管理端浏览器直接拉 JSON 看数据，避免每次 SSH。
+不想每次都 SSH + sqlite 看数据，可以直接用内置的管理页：
+
+- 地址：`https://zjs-cxq.top/admin.html`
+- 打开后输入**管理口令**即可看到所有回执表格、出席统计，并能一键下载 CSV。
+- 口令会保存在浏览器本地（localStorage），下次打开免输入；点「退出」清除。
+
+### 10.1 口令存放位置
+
+口令保存在服务器文件 `/var/www/wedding/server/data/admin-token` 里（`data/`
+目录不进 git、也不会被部署覆盖）。后端启动时读取它；文件不存在时管理接口自动禁用
+（返回 503），不会裸奔。
+
+### 10.2 重置 / 修改口令
+
+```bash
+# 生成新口令并写入
+openssl rand -hex 16 > /var/www/wedding/server/data/admin-token
+chmod 600 /var/www/wedding/server/data/admin-token
+# 让后端重新读取
+pm2 restart wedding-rsvp
+# 查看当前口令
+cat /var/www/wedding/server/data/admin-token
+```
+
+> 接口说明：`GET /api/admin/rsvp`（JSON）和 `GET /api/admin/rsvp.csv`（下载），
+> 都需要在请求头带 `Authorization: Bearer <口令>`；管理页已自动处理。
+
+---
+
+## 11. 一些扩展能力（可选，按需做）
+
 - **微信通知**：每次新提交时调用企业微信 / 飞书 webhook 推一条消息到新人手机。
 - **CDN 加速**：备案下来后接入阿里云 CDN，把 `dist/` 推到 OSS，进一步减轻服务器压力（婚礼站规模其实用不上）。
 - **Let's Encrypt 自动续签**：如果不想用阿里云免费证书，可以装 `certbot` 自动续签：

@@ -13,11 +13,13 @@ export function Invitation() {
         诚邀您莅临 · 共证幸福
       </h2>
       <p className="mx-auto max-w-xl text-base leading-9 text-ink-soft md:text-lg">
-        盛夏将至，我们将在熟悉的城市，以最真挚的心意，
-        <br className="hidden md:inline" />
-        办一场温柔而隆重的婚礼。
+        好久不见，当你收到这封邀请函
         <br />
-        愿您拨冗莅临，与我们一同在这份美好里，留下值得珍藏的回忆。
+        我们已经在倒数着日子，期待与你相见
+        <br />
+        在我们最重要的这一天
+        <br />
+        邀请并期待你一同见证我们的幸福时刻
       </p>
 
       <div className="mt-10 flex items-center justify-center">
