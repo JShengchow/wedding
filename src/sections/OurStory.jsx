@@ -30,7 +30,7 @@ export function OurStory() {
           </div>
         </div>
 
-        <div className="relative aspect-video overflow-hidden rounded-[32px] border border-champagne-100 bg-champagne-100 shadow-soft">
+        <div className="relative -mx-5 aspect-video overflow-hidden border-y border-champagne-100 bg-champagne-100 shadow-soft md:mx-0 md:rounded-[32px] md:border">
           <img
             src={storyPhoto}
             alt="我们的故事"

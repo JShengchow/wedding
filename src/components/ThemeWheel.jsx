@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Music2, Palette, Sparkles, X } from "lucide-react";
+import { Music2, Palette, Sparkles } from "lucide-react";
 import { BGM_SRC } from "../content/wedding";
 
 const AUTO_CLOSE_MS = 5000;
+const ONBOARDING_EXIT_MS = 620;
 const EDGE_GAP = 12;
 
 function getInitialTop() {
@@ -15,6 +16,7 @@ export function ThemeWheel({ themes, activeTheme, onChange }) {
   const audioRef = useRef(null);
   const dockRef = useRef(null);
   const ignoreClickRef = useRef(false);
+  const onboardingTimerRef = useRef(null);
   const dragStateRef = useRef({
     active: false,
     moved: false,
@@ -23,6 +25,8 @@ export function ThemeWheel({ themes, activeTheme, onChange }) {
     startTop: 0,
   });
   const [open, setOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [onboardingLeaving, setOnboardingLeaving] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [dockSide, setDockSide] = useState("right");
   const [dockTop, setDockTop] = useState(getInitialTop);
@@ -40,6 +44,25 @@ export function ThemeWheel({ themes, activeTheme, onChange }) {
     const maxTop = Math.max(EDGE_GAP, window.innerHeight - dockHeight - EDGE_GAP);
     return Math.min(maxTop, Math.max(EDGE_GAP, candidate));
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (onboardingTimerRef.current) {
+        window.clearTimeout(onboardingTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!showOnboarding) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showOnboarding]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -60,6 +83,20 @@ export function ThemeWheel({ themes, activeTheme, onChange }) {
       window.cancelAnimationFrame(frame);
     };
   }, [open, clampTop]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (dockRef.current?.contains(event.target)) return;
+      setOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -92,8 +129,10 @@ export function ThemeWheel({ themes, activeTheme, onChange }) {
       return;
     }
 
-    setOpen((value) => !value);
     markActivity();
+    if (open) return;
+
+    setOpen(true);
   };
 
   const handleDragStart = (event) => {
@@ -159,74 +198,174 @@ export function ThemeWheel({ themes, activeTheme, onChange }) {
       .catch(() => setPlaying(false));
   };
 
+  const enterInvitation = (shouldPlayMusic) => {
+    const audio = audioRef.current;
+    markActivity();
+
+    if (shouldPlayMusic && audio) {
+      audio
+        .play()
+        .then(() => setPlaying(true))
+        .catch(() => setPlaying(false));
+    } else if (audio) {
+      audio.pause();
+      setPlaying(false);
+    }
+
+    setOnboardingLeaving(true);
+    onboardingTimerRef.current = window.setTimeout(() => {
+      setShowOnboarding(false);
+      setOnboardingLeaving(false);
+      setOpen(false);
+    }, ONBOARDING_EXIT_MS);
+  };
+
   return (
-    <div
-      ref={dockRef}
-      className={`floating-dock side-${dockSide} ${open ? "is-open" : ""} ${dragging ? "is-dragging" : ""}`}
-      style={{ top: `${dockTop}px` }}
-    >
-      <audio ref={audioRef} loop preload="none" src={BGM_SRC} />
+    <>
+      {showOnboarding ? (
+        <div
+          className={`theme-onboarding ${onboardingLeaving ? "is-leaving" : ""}`}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="theme-onboarding-title"
+          aria-describedby="theme-onboarding-desc"
+        >
+          <div className="theme-onboarding-card">
+            <span className="theme-onboarding-orbit" aria-hidden="true" />
+            <div className="theme-onboarding-icon" aria-hidden="true">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <p className="text-eyebrow text-[10px] text-champagne-600">
+              Before We Begin
+            </p>
+            <h2
+              id="theme-onboarding-title"
+              className="mt-2 text-display text-2xl font-light text-ink"
+            >
+              先选一个喜欢的风格
+            </h2>
+            <p
+              id="theme-onboarding-desc"
+              className="mx-auto mt-3 max-w-[17rem] text-sm leading-7 text-ink-soft"
+            >
+              也可以决定是否播放背景音乐，再进入我们的邀请函。
+            </p>
 
-      <button
-        type="button"
-        onClick={handleTriggerClick}
-        onPointerDown={handleDragStart}
-        onPointerMove={handleDragMove}
-        onPointerUp={handleDragEnd}
-        onPointerCancel={handleDragEnd}
-        className="floating-dock-trigger"
-        aria-label={open ? "收起主题与音乐控制" : "展开主题与音乐控制"}
-        title={open ? "收起控制" : "展开控制"}
-      >
-        {open ? <X className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
-      </button>
+            <div className="theme-onboarding-swatches">
+              {themes.map((theme) => {
+                const isActive = theme.id === activeTheme;
+                return (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    aria-label={`选择${theme.label}`}
+                    title={theme.label}
+                    onClick={() => {
+                      onChange(theme.id);
+                      markActivity();
+                    }}
+                    className={`theme-onboarding-swatch ${
+                      isActive ? "is-active" : ""
+                    }`}
+                    style={{
+                      background: `linear-gradient(135deg, ${theme.preview[0]} 0%, ${theme.preview[1]} 100%)`,
+                    }}
+                  >
+                    <span>{theme.labelShort}</span>
+                  </button>
+                );
+              })}
+            </div>
 
-      <div className="floating-dock-panel" onPointerDownCapture={markActivity}>
-        <div className="floating-dock-row">
-          <div className="floating-dock-label">
-            <Music2 className="h-4 w-4" />
-            <span>背景音乐</span>
+            <div className="theme-onboarding-actions">
+              <button
+                type="button"
+                className="theme-onboarding-primary"
+                onClick={() => enterInvitation(true)}
+              >
+                <Music2 className="h-4 w-4" />
+                播放音乐进入
+              </button>
+              <button
+                type="button"
+                className="theme-onboarding-secondary"
+                onClick={() => enterInvitation(false)}
+              >
+                静音进入
+              </button>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={toggleMusic}
-            className={`floating-music-btn ${playing ? "is-playing" : ""}`}
-          >
-            <Music2
-              className={playing ? "h-4 w-4 animate-spin [animation-duration:4s]" : "h-4 w-4"}
-            />
-            <span>{playing ? "暂停" : "播放"}</span>
-          </button>
         </div>
+      ) : null}
 
-        <div className="floating-dock-row floating-dock-row-theme">
-          <div className="floating-dock-label">
-            <Palette className="h-4 w-4" />
-            <span>{active.labelShort}</span>
+      <div
+        ref={dockRef}
+        className={`floating-dock side-${dockSide} ${open ? "is-open" : ""} ${dragging ? "is-dragging" : ""}`}
+        style={{ top: `${dockTop}px` }}
+      >
+        <audio ref={audioRef} loop preload="none" src={BGM_SRC} />
+
+        <button
+          type="button"
+          onClick={handleTriggerClick}
+          onPointerDown={handleDragStart}
+          onPointerMove={handleDragMove}
+          onPointerUp={handleDragEnd}
+          onPointerCancel={handleDragEnd}
+          className="floating-dock-trigger"
+          aria-label={open ? "主题与音乐控制入口" : "展开主题与音乐控制"}
+          title={open ? "主题与音乐" : "展开控制"}
+        >
+          <Sparkles className="h-4 w-4" />
+        </button>
+
+        <div className="floating-dock-panel" onPointerDownCapture={markActivity}>
+          <div className="floating-dock-row">
+            <div className="floating-dock-label">
+              <Music2 className="h-4 w-4" />
+              <span>背景音乐</span>
+            </div>
+            <button
+              type="button"
+              onClick={toggleMusic}
+              className={`floating-music-btn ${playing ? "is-playing" : ""}`}
+            >
+              <Music2
+                className={playing ? "h-4 w-4 animate-spin [animation-duration:4s]" : "h-4 w-4"}
+              />
+              <span>{playing ? "暂停" : "播放"}</span>
+            </button>
           </div>
-          <div className="floating-theme-swatches">
-            {themes.map((theme) => {
-              const isActive = theme.id === activeTheme;
-              return (
-                <button
-                  key={theme.id}
-                  type="button"
-                  aria-label={`切换到${theme.label}`}
-                  title={theme.label}
-                  onClick={() => {
-                    onChange(theme.id);
-                    markActivity();
-                  }}
-                  className={`floating-theme-swatch ${isActive ? "is-active" : ""}`}
-                  style={{
-                    background: `linear-gradient(135deg, ${theme.preview[0]} 0%, ${theme.preview[1]} 100%)`,
-                  }}
-                />
-              );
-            })}
+
+          <div className="floating-dock-row floating-dock-row-theme">
+            <div className="floating-dock-label">
+              <Palette className="h-4 w-4" />
+              <span>{active.labelShort}</span>
+            </div>
+            <div className="floating-theme-swatches">
+              {themes.map((theme) => {
+                const isActive = theme.id === activeTheme;
+                return (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    aria-label={`切换到${theme.label}`}
+                    title={theme.label}
+                    onClick={() => {
+                      onChange(theme.id);
+                      markActivity();
+                    }}
+                    className={`floating-theme-swatch ${isActive ? "is-active" : ""}`}
+                    style={{
+                      background: `linear-gradient(135deg, ${theme.preview[0]} 0%, ${theme.preview[1]} 100%)`,
+                    }}
+                  />
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

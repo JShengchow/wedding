@@ -1,48 +1,48 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ChevronDown,
   ChevronUp,
-  Pause,
-  Play,
-  Sparkles,
 } from "lucide-react";
 import { MemoryMap } from "../components/MemoryMap";
 import { carouselPhotos, photoWallPhotos, polaroidPhotos } from "../lib/photos";
 
-const MEMORY_REEL = [
+const MEMORY_STILLS = [
   {
     photoIndex: 0,
+    orientation: "landscape",
     tag: "晚风散步",
     chapter: "2023 · 秋",
     caption: "走过的每条路，都因为有你而柔软",
   },
   {
     photoIndex: 1,
+    orientation: "landscape",
     tag: "对视一瞬",
     chapter: "2024 · 冬",
     caption: "笑着对视的那一秒，便是答案",
   },
   {
     photoIndex: 2,
+    orientation: "landscape",
     tag: "日常浪漫",
     chapter: "2024 · 春",
     caption: "把寻常的日子，过成了节日",
   },
   {
     photoIndex: 3,
+    orientation: "landscape",
     tag: "春日告白",
     chapter: "2025 · 春",
     caption: "答应余生的那个春天",
   },
   {
     photoIndex: 4,
+    orientation: "landscape",
     tag: "婚纱白光",
     chapter: "2025 · 夏",
     caption: "婚纱与白光，定格成永远",
   },
 ];
-
-const REEL_INTERVAL_MS = 5200;
 
 const MOSAIC_PHOTOS = [
   {
@@ -106,89 +106,48 @@ const POLAROID_STACK = [
   },
 ];
 
+const POLAROID_COLLAPSED_TRANSFORMS = [
+  "translate(-50%, -50%) rotate(-1deg) translateY(-8px) scale(1)",
+  "translate(-50%, -50%) rotate(6deg) translate(34px, 28px) scale(0.9)",
+  "translate(-50%, -50%) rotate(-7deg) translate(-30px, 34px) scale(0.84)",
+];
+
+const POLAROID_EXPANDED_TOPS = ["19%", "50%", "81%"];
+
+const POLAROID_EXPANDED_TRANSFORMS = [
+  "translate(-55%, -50%) rotate(-5deg) scale(0.9)",
+  "translate(-45%, -50%) rotate(2deg) scale(0.94)",
+  "translate(-54%, -50%) rotate(6deg) scale(0.9)",
+];
+
 export function Gallery() {
   const [showMemoryWall, setShowMemoryWall] = useState(false);
-  const [polaroidIndex, setPolaroidIndex] = useState(0);
-  const [reelIndex, setReelIndex] = useState(0);
-  const [reelPaused, setReelPaused] = useState(false);
-  const [isReelResetting, setIsReelResetting] = useState(false);
-  const [reelTouchStart, setReelTouchStart] = useState(null);
-
-  const activeReelIndex = reelIndex % MEMORY_REEL.length;
-  const activeReel = MEMORY_REEL[activeReelIndex];
-  const reelSlides = [...MEMORY_REEL, MEMORY_REEL[0]];
+  const [polaroidsExpanded, setPolaroidsExpanded] = useState(
+    () => typeof window !== "undefined" && !("IntersectionObserver" in window),
+  );
+  const polaroidStackRef = useRef(null);
 
   useEffect(() => {
-    if (reelPaused) return undefined;
-    const timer = window.setInterval(() => {
-      setIsReelResetting(false);
-      setReelIndex((index) => index + 1);
-    }, REEL_INTERVAL_MS);
-    return () => window.clearInterval(timer);
-  }, [reelPaused]);
+    const stackNode = polaroidStackRef.current;
 
-  const goToReel = (index) => {
-    setIsReelResetting(false);
-    setReelIndex(index);
-  };
+    if (!stackNode) return undefined;
 
-  const goToNextReel = () => {
-    setIsReelResetting(false);
-    setReelIndex((index) => index + 1);
-  };
+    if (!("IntersectionObserver" in window)) return undefined;
 
-  const goToPrevReel = () => {
-    setIsReelResetting(false);
-    setReelIndex((index) =>
-      index === 0 ? MEMORY_REEL.length - 1 : index - 1,
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setPolaroidsExpanded(entry.isIntersecting);
+      },
+      {
+        rootMargin: "-8% 0px -16% 0px",
+        threshold: 0.34,
+      },
     );
-  };
 
-  const goToPolaroid = (index) => {
-    setPolaroidIndex(
-      (index + POLAROID_STACK.length) % POLAROID_STACK.length,
-    );
-  };
+    observer.observe(stackNode);
 
-  const handleReelTouchStart = (event) => {
-    const touch = event.touches[0];
-    setReelPaused(true);
-    setReelTouchStart({ x: touch.clientX, y: touch.clientY });
-  };
-
-  const handleReelTouchEnd = (event) => {
-    if (!reelTouchStart) {
-      setReelPaused(false);
-      return;
-    }
-
-    const touch = event.changedTouches[0];
-    const deltaX = touch.clientX - reelTouchStart.x;
-    const deltaY = touch.clientY - reelTouchStart.y;
-    const isHorizontalSwipe =
-      Math.abs(deltaX) > 42 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2;
-
-    if (isHorizontalSwipe) {
-      if (deltaX < 0) {
-        goToNextReel();
-      } else {
-        goToPrevReel();
-      }
-    }
-
-    setReelTouchStart(null);
-    setReelPaused(false);
-  };
-
-  const handleReelTransitionEnd = () => {
-    if (reelIndex < MEMORY_REEL.length) return;
-
-    setIsReelResetting(true);
-    setReelIndex(0);
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => setIsReelResetting(false));
-    });
-  };
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <section className="px-5 pb-20 md:px-6">
@@ -205,136 +164,83 @@ export function Gallery() {
 
       <div className="mx-auto max-w-5xl space-y-4 md:space-y-5">
         <div>
-          <article className="flex flex-col overflow-hidden rounded-[28px] border border-champagne-200/70 bg-ivory-50/90 shadow-soft backdrop-blur">
-            <figure
-              className="memory-reel relative aspect-[4/3] overflow-hidden border-b border-champagne-100/70 bg-gradient-to-br from-champagne-100/70 via-ivory-50 to-blush-50/50 md:aspect-[16/9]"
-              onMouseEnter={() => setReelPaused(true)}
-              onMouseLeave={() => setReelPaused(false)}
-              onTouchStart={handleReelTouchStart}
-              onTouchEnd={handleReelTouchEnd}
-              onTouchCancel={() => {
-                setReelTouchStart(null);
-                setReelPaused(false);
-              }}
-            >
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute -left-16 top-16 z-[1] h-44 w-44 rounded-full bg-blush-200/40 blur-3xl"
-              />
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute -right-12 bottom-10 z-[1] h-52 w-52 rounded-full bg-champagne-200/45 blur-3xl"
-              />
+          <article className="relative space-y-10 md:space-y-14">
+            {MEMORY_STILLS.slice(0, 2).map((item, index) => {
+              const photo = carouselPhotos[item.photoIndex];
 
-              <div className="absolute left-4 right-4 top-4 z-[10] flex items-start justify-between gap-3">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-champagne-200/80 bg-white/85 px-2.5 py-1 text-[10px] tracking-[0.22em] text-champagne-700 backdrop-blur">
-                  <Sparkles className="h-3 w-3" />
-                  MEMORY REEL
-                </span>
-
-                <button
-                  type="button"
-                  onClick={() => setReelPaused((value) => !value)}
-                  aria-label={reelPaused ? "继续播放" : "暂停轮播"}
-                  title={reelPaused ? "继续播放" : "暂停轮播"}
-                  className="grid h-7 w-7 place-items-center rounded-full border border-champagne-200/80 bg-white/80 text-champagne-700 backdrop-blur transition hover:bg-white"
-                >
-                  {reelPaused ? (
-                    <Play className="h-3 w-3" />
-                  ) : (
-                    <Pause className="h-3 w-3" />
-                  )}
-                </button>
-              </div>
-
-              <div className="absolute inset-0 z-[2]" aria-live="polite">
-                <div
-                  className={`flex h-full will-change-transform ${
-                    isReelResetting
-                      ? "transition-none"
-                      : "transition-transform duration-1000 ease-[cubic-bezier(0.32,0.8,0.32,1)]"
-                  }`}
-                  style={{ transform: `translateX(-${reelIndex * 100}%)` }}
-                  onTransitionEnd={handleReelTransitionEnd}
-                >
-                  {reelSlides.map((item, i) => {
-                    const photo = carouselPhotos[item.photoIndex];
-                    const realIndex = i % MEMORY_REEL.length;
-                    const isActive = realIndex === activeReelIndex;
-
-                    return (
-                      <button
-                        key={`${item.tag}-${i}`}
-                        type="button"
-                        onClick={() => goToReel(realIndex)}
-                        aria-label={`查看第 ${realIndex + 1} 张照片`}
-                        aria-current={isActive}
-                        tabIndex={isActive ? 0 : -1}
-                        className="relative h-full min-w-full overflow-hidden border-0 bg-champagne-100 p-0"
-                      >
-                        <img
-                          src={photo.src}
-                          alt={photo.alt}
-                          loading={realIndex === 0 ? "eager" : "lazy"}
-                          decoding="async"
-                          className={`h-full w-full object-cover object-center transition-transform duration-[5200ms] ease-linear ${
-                            isActive ? "scale-105" : "scale-100"
-                          }`}
-                        />
-
-                        <span
-                          aria-hidden="true"
-                          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/45 via-transparent to-transparent"
-                        />
-                        <span
-                          aria-hidden="true"
-                          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_46%,rgba(47,38,30,0.28)_100%)]"
-                        />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div
-                key={`${activeReel.tag}-${activeReelIndex}`}
-                className="pointer-events-none absolute bottom-10 left-5 right-5 z-[8] max-w-xl text-white md:bottom-12 md:left-8"
-              >
-                <p className="text-eyebrow text-[10px] text-white/75 md:text-[11px]">
-                  {activeReel.chapter}
-                </p>
-                <p className="mt-2 text-2xl font-light leading-none text-white text-shadow-soft md:text-4xl">
-                  {activeReel.tag}
-                </p>
-                <p className="mt-2 max-w-sm text-sm leading-7 text-white/80 md:text-base">
-                  {activeReel.caption}
-                </p>
-              </div>
-
-              <div className="absolute bottom-4 left-1/2 z-[9] flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/40 bg-white/50 px-2.5 py-1.5 backdrop-blur">
-                {MEMORY_REEL.map((item, i) => (
-                  <button
-                    key={item.tag}
-                    type="button"
-                    onClick={() => goToReel(i)}
-                    aria-label={`切换到第 ${i + 1} 张照片`}
-                    aria-current={i === activeReelIndex}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      i === activeReelIndex
-                        ? "w-4 bg-champagne-600"
-                        : "w-1.5 bg-champagne-300/80 hover:bg-champagne-500"
-                    }`}
+              return (
+                <figure key={item.tag} className="-mx-5 md:mx-0">
+                  <img
+                    src={photo.src}
+                    alt={photo.alt}
+                    loading={index === 0 ? "eager" : "lazy"}
+                    decoding="async"
+                    className="aspect-video w-full object-cover object-center"
                   />
-                ))}
-              </div>
+                </figure>
+              );
+            })}
 
-            </figure>
+            <div className="grid gap-6 md:grid-cols-[0.82fr_1fr] md:items-start">
+              <p className="text-display text-5xl font-light leading-[0.96] text-ink-light md:text-6xl">
+                I love you
+                <br />
+                forever
+              </p>
+              <p className="text-sm leading-8 tracking-[0.14em] text-ink-soft md:text-right md:text-base">
+                从并肩到相望
+                <br />
+                从日常到余生
+                <br />
+                都是我们认真相爱的证明
+              </p>
+            </div>
 
-            <p className="px-6 py-6 text-center text-sm leading-8 text-ink-soft md:px-8 md:text-base">
-              从并肩到相望，
-              <br className="md:hidden" />
-              从日常到余生，都是我们认真相爱的证明。
-            </p>
+            <div className="space-y-12 md:space-y-16">
+              {MEMORY_STILLS.slice(2).map((item, index) => {
+                const photo = carouselPhotos[item.photoIndex];
+                const imageOnLeft = index % 2 === 1;
+                const stagger = [
+                  "",
+                  "md:translate-y-8",
+                  "md:-translate-y-4",
+                ][index];
+
+                return (
+                  <figure
+                    key={item.tag}
+                    className={`grid items-center gap-4 md:gap-8 ${
+                      imageOnLeft
+                        ? "grid-cols-[1fr_0.42fr] md:grid-cols-[1fr_0.32fr]"
+                        : "grid-cols-[0.42fr_1fr] md:grid-cols-[0.32fr_1fr]"
+                    } ${stagger}`}
+                  >
+                    <figcaption
+                      className={`relative z-[1] ${
+                        imageOnLeft ? "order-2 text-right md:text-left" : ""
+                      }`}
+                    >
+                      <p className="text-display text-2xl font-light leading-none text-ink md:text-4xl">
+                        {item.tag}
+                      </p>
+                      <p className="mt-3 text-xs leading-6 text-ink-soft md:text-base md:leading-8">
+                        {item.caption}
+                      </p>
+                    </figcaption>
+
+                    <div className={`overflow-hidden ${imageOnLeft ? "order-1" : ""}`}>
+                      <img
+                        src={photo.src}
+                        alt={photo.alt}
+                        loading={index === 0 ? "eager" : "lazy"}
+                        decoding="async"
+                        className="aspect-[3/2] w-full object-cover object-center"
+                      />
+                    </div>
+                  </figure>
+                );
+              })}
+            </div>
           </article>
         </div>
 
@@ -449,7 +355,11 @@ export function Gallery() {
         </article>
 
         <article className="overflow-hidden rounded-[30px] border border-champagne-200/70 bg-gradient-to-br from-white/90 via-ivory-50/95 to-blush-50/70 p-4 shadow-soft md:p-6">
-          <div className="relative mx-auto min-h-[430px] max-w-xl overflow-hidden rounded-[26px] border border-champagne-200/70 bg-[radial-gradient(circle_at_20%_12%,rgba(245,213,214,0.72),transparent_38%),linear-gradient(135deg,rgba(255,252,247,0.98),rgba(246,239,217,0.7))] md:min-h-[520px]">
+          <div
+            ref={polaroidStackRef}
+            aria-label="自动展开的拍立得照片组"
+            className="relative mx-auto min-h-[640px] max-w-xl overflow-hidden rounded-[26px] border border-champagne-200/70 bg-[radial-gradient(circle_at_20%_12%,rgba(245,213,214,0.72),transparent_38%),linear-gradient(135deg,rgba(255,252,247,0.98),rgba(246,239,217,0.7))] transition-[min-height] duration-700 ease-out md:min-h-[760px]"
+          >
             <span
               aria-hidden="true"
               className="absolute left-7 top-7 h-px w-24 rotate-[-14deg] bg-champagne-300/70"
@@ -461,29 +371,23 @@ export function Gallery() {
 
             {POLAROID_STACK.map((item, index) => {
               const photo = polaroidPhotos[item.photoIndex];
-              const distance =
-                (index - polaroidIndex + POLAROID_STACK.length) %
-                POLAROID_STACK.length;
-              const isActive = index === polaroidIndex;
-              const cardTransforms = [
-                "translate(-50%, -50%) rotate(-1deg) translateY(-8px) scale(1)",
-                "translate(-50%, -50%) rotate(6deg) translate(34px, 28px) scale(0.9)",
-                "translate(-50%, -50%) rotate(-7deg) translate(-30px, 34px) scale(0.84)",
-              ];
 
               return (
-                <button
+                <figure
                   key={item.title}
-                  type="button"
-                  onClick={() => goToPolaroid(index)}
-                  aria-label={`查看拍立得照片：${item.title}`}
-                  aria-current={isActive}
-                  className={`absolute left-1/2 top-1/2 w-[84%] max-w-[390px] rounded-[18px] border border-champagne-100 bg-white p-3 text-left shadow-[0_24px_60px_-34px_rgba(92,74,63,0.55)] transition duration-500 hover:shadow-warm md:w-[78%] ${
-                    isActive ? "opacity-100" : "opacity-75"
-                  }`}
+                  className="absolute left-1/2 m-0 w-[70%] max-w-[340px] rounded-[18px] border border-champagne-100 bg-white p-3 text-left shadow-[0_24px_60px_-34px_rgba(92,74,63,0.55)] transition-[top,transform,opacity,box-shadow] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] md:w-[60%]"
                   style={{
-                    transform: cardTransforms[distance],
-                    zIndex: POLAROID_STACK.length - distance,
+                    opacity: polaroidsExpanded ? 1 : index === 0 ? 1 : 0.78,
+                    top: polaroidsExpanded
+                      ? POLAROID_EXPANDED_TOPS[index]
+                      : "50%",
+                    transform: polaroidsExpanded
+                      ? POLAROID_EXPANDED_TRANSFORMS[index]
+                      : POLAROID_COLLAPSED_TRANSFORMS[index],
+                    transitionDelay: polaroidsExpanded
+                      ? `${index * 120}ms`
+                      : "0ms",
+                    zIndex: POLAROID_STACK.length - index,
                   }}
                 >
                   <img
@@ -501,7 +405,7 @@ export function Gallery() {
                       {item.title}
                     </span>
                   </span>
-                </button>
+                </figure>
               );
             })}
           </div>

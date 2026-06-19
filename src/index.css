@@ -894,6 +894,166 @@ body {
   }
 }
 
+.theme-onboarding {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(
+      circle at 50% 36%,
+      rgb(var(--c-ivory-50) / 0.92) 0%,
+      rgb(var(--c-ivory-100) / 0.78) 36%,
+      rgb(var(--c-ink) / 0.28) 100%
+    );
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition:
+    opacity 0.58s ease,
+    backdrop-filter 0.58s ease;
+}
+
+.theme-onboarding.is-leaving {
+  pointer-events: none;
+  opacity: 0;
+  backdrop-filter: blur(0);
+  -webkit-backdrop-filter: blur(0);
+}
+
+.theme-onboarding-card {
+  position: relative;
+  width: min(100%, 360px);
+  overflow: hidden;
+  border: 1px solid rgb(var(--c-champagne-300) / 0.48);
+  border-radius: 30px;
+  padding: 30px 22px 22px;
+  background:
+    radial-gradient(circle at 18% 8%, rgb(var(--c-blush-100) / 0.78), transparent 42%),
+    linear-gradient(145deg, rgb(var(--c-ivory-50) / 0.98), rgb(var(--c-ivory-100) / 0.9));
+  box-shadow:
+    0 28px 74px -42px rgb(var(--c-ink) / 0.58),
+    inset 0 1px 0 rgb(var(--c-ivory-50) / 0.78);
+  text-align: center;
+  transform: translate3d(0, 0, 0) scale(1);
+  transform-origin: center;
+  transition:
+    transform 0.62s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.42s ease,
+    border-radius 0.62s ease;
+}
+
+.theme-onboarding.is-leaving .theme-onboarding-card {
+  border-radius: 999px;
+  opacity: 0;
+  transform: translate3d(calc(50vw - 58px), -4vh, 0) scale(0.16);
+}
+
+.theme-onboarding-orbit {
+  position: absolute;
+  inset: 14px;
+  border: 1px solid rgb(var(--c-champagne-300) / 0.22);
+  border-radius: 999px;
+  transform: rotate(-8deg);
+  pointer-events: none;
+}
+
+.theme-onboarding-icon {
+  position: relative;
+  z-index: 1;
+  display: inline-grid;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 12px;
+  place-items: center;
+  border: 1px solid rgb(var(--c-champagne-300) / 0.46);
+  border-radius: 999px;
+  background: rgb(var(--c-ivory-50) / 0.82);
+  color: rgb(var(--c-champagne-700) / 1);
+  box-shadow: 0 14px 28px -22px rgb(var(--c-ink) / 0.72);
+}
+
+.theme-onboarding-swatches {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.theme-onboarding-swatch {
+  min-height: 52px;
+  border: 1.5px solid rgb(var(--c-ivory-50) / 0.92);
+  border-radius: 18px;
+  box-shadow: 0 14px 26px -22px rgb(var(--c-ink) / 0.68);
+  color: rgb(var(--c-ivory-50) / 1);
+  cursor: pointer;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 6px rgb(var(--c-ink) / 0.38);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.theme-onboarding-swatch:hover {
+  transform: translateY(-2px);
+}
+
+.theme-onboarding-swatch.is-active {
+  box-shadow:
+    0 0 0 3px rgb(var(--c-champagne-500) / 0.35),
+    0 16px 28px -22px rgb(var(--c-ink) / 0.68);
+}
+
+.theme-onboarding-actions {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 0.72fr;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.theme-onboarding-primary,
+.theme-onboarding-secondary {
+  min-height: 42px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.theme-onboarding-primary:hover,
+.theme-onboarding-secondary:hover {
+  transform: translateY(-1px);
+}
+
+.theme-onboarding-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgb(var(--c-champagne-500) / 0.64);
+  background: linear-gradient(
+    120deg,
+    rgb(var(--c-champagne-500) / 0.95) 0%,
+    rgb(var(--c-champagne-700) / 0.94) 100%
+  );
+  color: rgb(var(--c-ivory-50) / 1);
+  box-shadow: 0 16px 28px -22px rgb(var(--c-ink) / 0.7);
+}
+
+.theme-onboarding-secondary {
+  border: 1px solid rgb(var(--c-champagne-300) / 0.58);
+  background: rgb(var(--c-ivory-50) / 0.72);
+  color: rgb(var(--c-champagne-700) / 1);
+}
+
 .floating-dock {
   position: fixed;
   z-index: 70;
