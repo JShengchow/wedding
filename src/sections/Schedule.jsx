@@ -1,9 +1,15 @@
+import { motion } from "framer-motion";
+import { MotionSection, motionItem } from "../components/MotionSection";
 import { SCHEDULE } from "../content/wedding";
 
 export function Schedule() {
   return (
-    <section className="px-5 pb-14 md:pb-16">
-      <div className="mx-auto max-w-2xl text-center">
+    <MotionSection
+      variant="driftRight"
+      stagger={0.09}
+      className="px-5 pb-14 md:pb-16"
+    >
+      <motion.div variants={motionItem} className="mx-auto max-w-2xl text-center">
         <p className="text-eyebrow mb-3 text-xs text-champagne-600">
           Wedding Schedule
         </p>
@@ -16,16 +22,23 @@ export function Schedule() {
           <br className="md:hidden" />
           欢迎您在合适的时间到场，一同共享喜悦。
         </p>
-      </div>
+      </motion.div>
 
-      <div className="mx-auto mt-10 max-w-2xl rounded-[32px] border border-champagne-200/70 bg-ivory-50/90 p-6 shadow-soft backdrop-blur md:p-10">
+      <motion.div
+        variants={motionItem}
+        className="mx-auto mt-10 max-w-2xl rounded-[32px] border border-champagne-200/70 bg-ivory-50/90 p-6 shadow-soft backdrop-blur md:p-10"
+      >
         <ol className="relative space-y-7 md:space-y-8">
           <span
             aria-hidden="true"
             className="absolute left-[68px] top-2 bottom-2 w-px bg-gradient-to-b from-champagne-200 via-champagne-400/70 to-champagne-200 md:left-[88px]"
           />
           {SCHEDULE.map((item) => (
-            <li key={item.time} className="relative flex items-start gap-5">
+            <motion.li
+              key={item.time}
+              variants={motionItem}
+              className="relative flex items-start gap-5"
+            >
               <p className="text-display w-14 shrink-0 text-right text-2xl font-light text-champagne-700 md:w-20 md:text-3xl">
                 {item.time}
               </p>
@@ -44,10 +57,10 @@ export function Schedule() {
                   {item.desc}
                 </p>
               </div>
-            </li>
+            </motion.li>
           ))}
         </ol>
-      </div>
-    </section>
+      </motion.div>
+    </MotionSection>
   );
 }

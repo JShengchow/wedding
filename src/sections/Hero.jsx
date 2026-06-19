@@ -7,11 +7,14 @@ import { COUPLE, WEDDING_DATE_LABEL } from "../content/wedding";
 export function Hero() {
   return (
     <section className="relative flex min-h-[100svh] overflow-hidden">
-      <img
+      <motion.img
         src={heroPhoto}
         alt={`${COUPLE.groomZh}与${COUPLE.brideZh}婚纱照`}
-        fetchpriority="high"
+        fetchPriority="high"
         decoding="async"
+        initial={{ opacity: 0.92, scale: 1.06 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 2.4, ease: [0.22, 1, 0.36, 1] }}
         className="absolute inset-0 h-full w-full object-cover object-[48%_center] md:object-center"
       />
 
@@ -25,19 +28,34 @@ export function Hero() {
         className="relative z-10 flex min-h-[100svh] w-full flex-col items-center justify-between px-5 pb-12 pt-[max(3rem,env(safe-area-inset-top))] text-center md:px-10 md:pb-16 md:pt-28"
       >
         <div className="mx-auto flex w-full max-w-[min(94vw,980px)] flex-col items-center text-white drop-shadow-[0_6px_24px_rgba(31,24,18,0.38)]">
-          <div className="mb-3 flex w-full max-w-[360px] items-center justify-center gap-3 text-white/82 md:mb-5 md:max-w-[520px]">
+          <motion.div
+            initial={{ opacity: 0, scaleX: 0.82 }}
+            animate={{ opacity: 1, scaleX: 1 }}
+            transition={{ delay: 0.24, duration: 1.2, ease: "easeOut" }}
+            className="mb-3 flex w-full max-w-[360px] origin-center items-center justify-center gap-3 text-white/82 md:mb-5 md:max-w-[520px]"
+          >
             <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/60 to-white/20" />
             <span className="font-sans text-[10px] uppercase tracking-[0.42em] md:text-xs">
               Z · C
             </span>
             <span className="h-px flex-1 bg-gradient-to-l from-transparent via-white/60 to-white/20" />
-          </div>
-          <p className="text-display whitespace-nowrap text-[clamp(1.75rem,7.4vw,5.8rem)] font-light italic leading-none tracking-[-0.045em] text-white/95 md:text-[clamp(4rem,7.6vw,6.8rem)]">
+          </motion.div>
+          <motion.p
+            initial={{ opacity: 0, y: 18, rotate: -0.8 }}
+            animate={{ opacity: 1, y: 0, rotate: 0 }}
+            transition={{ delay: 0.12, duration: 1.4, ease: "easeOut" }}
+            className="text-display whitespace-nowrap text-[clamp(1.75rem,7.4vw,5.8rem)] font-light italic leading-none tracking-[-0.045em] text-white/95 md:text-[clamp(4rem,7.6vw,6.8rem)]"
+          >
             We Are Getting Married
-          </p>
-          <p className="mt-3 font-sans text-[10px] uppercase tracking-[0.36em] text-white/76 md:mt-4 md:text-xs">
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.52, duration: 1.1, ease: "easeOut" }}
+            className="mt-3 font-sans text-[10px] uppercase tracking-[0.36em] text-white/76 md:mt-4 md:text-xs"
+          >
             July Eighteenth · Shenzhen
-          </p>
+          </motion.p>
         </div>
 
         <motion.div

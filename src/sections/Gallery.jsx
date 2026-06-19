@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
 import { MemoryMap } from "../components/MemoryMap";
+import { MotionSection, motionItem, scatterItem } from "../components/MotionSection";
 import { carouselPhotos, photoWallPhotos, polaroidPhotos } from "../lib/photos";
 
 const MEMORY_STILLS = [
@@ -150,8 +152,13 @@ export function Gallery() {
   }, []);
 
   return (
-    <section className="px-5 pb-20 md:px-6">
-      <div className="mx-auto mb-10 max-w-5xl text-center">
+    <MotionSection
+      variant="fade"
+      stagger={0.09}
+      viewportAmount={0.02}
+      className="px-5 pb-20 md:px-6"
+    >
+      <motion.div variants={motionItem} className="mx-auto mb-10 max-w-5xl text-center">
         <p className="text-eyebrow mb-3 text-xs text-champagne-600">Gallery</p>
         <h3 className="text-display text-3xl font-light text-ink md:text-4xl">
           浪漫瞬间
@@ -160,16 +167,20 @@ export function Gallery() {
         <p className="mx-auto mt-5 max-w-2xl text-sm leading-8 text-ink-soft md:text-base">
           愿每一次回望 · 都有温柔作伴
         </p>
-      </div>
+      </motion.div>
 
       <div className="mx-auto max-w-5xl space-y-4 md:space-y-5">
-        <div>
+        <motion.div variants={motionItem}>
           <article className="relative space-y-10 md:space-y-14">
             {MEMORY_STILLS.slice(0, 2).map((item, index) => {
               const photo = carouselPhotos[item.photoIndex];
 
               return (
-                <figure key={item.tag} className="-mx-5 md:mx-0">
+                <motion.figure
+                  key={item.tag}
+                  variants={scatterItem}
+                  className="-mx-5 md:mx-0"
+                >
                   <img
                     src={photo.src}
                     alt={photo.alt}
@@ -177,11 +188,14 @@ export function Gallery() {
                     decoding="async"
                     className="aspect-video w-full object-cover object-center"
                   />
-                </figure>
+                </motion.figure>
               );
             })}
 
-            <div className="grid gap-6 md:grid-cols-[0.82fr_1fr] md:items-start">
+            <motion.div
+              variants={motionItem}
+              className="grid gap-6 md:grid-cols-[0.82fr_1fr] md:items-start"
+            >
               <p className="text-display text-5xl font-light leading-[0.96] text-ink-light md:text-6xl">
                 I love you
                 <br />
@@ -194,7 +208,7 @@ export function Gallery() {
                 <br />
                 都是我们认真相爱的证明
               </p>
-            </div>
+            </motion.div>
 
             <div className="space-y-12 md:space-y-16">
               {MEMORY_STILLS.slice(2).map((item, index) => {
@@ -207,8 +221,9 @@ export function Gallery() {
                 ][index];
 
                 return (
-                  <figure
+                  <motion.figure
                     key={item.tag}
+                    variants={scatterItem}
                     className={`grid items-center gap-4 md:gap-8 ${
                       imageOnLeft
                         ? "grid-cols-[1fr_0.42fr] md:grid-cols-[1fr_0.32fr]"
@@ -237,14 +252,17 @@ export function Gallery() {
                         className="aspect-[3/2] w-full object-cover object-center"
                       />
                     </div>
-                  </figure>
+                  </motion.figure>
                 );
               })}
             </div>
           </article>
-        </div>
+        </motion.div>
 
-        <article className="overflow-hidden rounded-[30px] border border-champagne-200/70 bg-ivory-50/95 p-4 shadow-soft md:p-6 pb-8">
+        <motion.article
+          variants={motionItem}
+          className="overflow-hidden rounded-[30px] border border-champagne-200/70 bg-ivory-50/95 p-4 shadow-soft md:p-6 pb-8"
+        >
           <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-eyebrow text-[10px] text-champagne-600 md:text-[11px]">
@@ -352,9 +370,12 @@ export function Gallery() {
               })}
             </div>
           </div>
-        </article>
+        </motion.article>
 
-        <article className="overflow-hidden rounded-[30px] border border-champagne-200/70 bg-gradient-to-br from-white/90 via-ivory-50/95 to-blush-50/70 p-4 shadow-soft md:p-6">
+        <motion.article
+          variants={motionItem}
+          className="overflow-hidden rounded-[30px] border border-champagne-200/70 bg-gradient-to-br from-white/90 via-ivory-50/95 to-blush-50/70 p-4 shadow-soft md:p-6"
+        >
           <div
             ref={polaroidStackRef}
             aria-label="自动展开的拍立得照片组"
@@ -409,9 +430,12 @@ export function Gallery() {
               );
             })}
           </div>
-        </article>
+        </motion.article>
 
-        <article className="rounded-[30px] border border-champagne-200/70 bg-ivory-50/90 p-4 shadow-soft md:p-6">
+        <motion.article
+          variants={motionItem}
+          className="rounded-[30px] border border-champagne-200/70 bg-ivory-50/90 p-4 shadow-soft md:p-6"
+        >
           <button
             type="button"
             onClick={() => setShowMemoryWall((prev) => !prev)}
@@ -459,9 +483,9 @@ export function Gallery() {
               {showMemoryWall ? <MemoryMap /> : null}
             </div>
           </div>
-        </article>
+        </motion.article>
       </div>
 
-    </section>
+    </MotionSection>
   );
 }

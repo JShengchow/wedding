@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { AlertCircle, Heart, LoaderCircle } from "lucide-react";
 import { Field } from "../components/Field";
+import { MotionSection, motionItem } from "../components/MotionSection";
 import { submitRsvp } from "../lib/supabase";
 
 const INITIAL_FORM = {
@@ -122,9 +124,9 @@ export function RsvpForm() {
   const isAbsent = form.attendance === "absent";
 
   return (
-    <section className="px-5 pb-16 md:pb-20">
+    <MotionSection variant="fade" stagger={0.1} className="px-5 pb-16 md:pb-20">
       <div className="mx-auto max-w-xl">
-        <div className="text-center">
+        <motion.div variants={motionItem} className="text-center">
           <p className="text-eyebrow mb-3 text-xs text-champagne-600">RSVP</p>
           <h3 className="text-display text-3xl font-light text-ink md:text-4xl">
             宾客回执
@@ -133,11 +135,19 @@ export function RsvpForm() {
           <p className="mx-auto mt-4 max-w-sm text-sm leading-7 text-ink-soft">
             您的回执将帮助我们更好地安排座席与接待
           </p>
-        </div>
+        </motion.div>
 
-        <div className="mt-8 rounded-[32px] border border-champagne-200/70 bg-ivory-50/95 p-6 shadow-soft backdrop-blur md:p-10">
+        <motion.div
+          variants={motionItem}
+          className="mt-8 rounded-[32px] border border-champagne-200/70 bg-ivory-50/95 p-6 shadow-soft backdrop-blur md:p-10"
+        >
           {submitted ? (
-            <div className="py-6 text-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              className="py-6 text-center"
+            >
               <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-blush-100 to-champagne-100 ring-1 ring-champagne-200">
                 <Heart className="h-9 w-9 text-blush-500" />
               </div>
@@ -156,9 +166,14 @@ export function RsvpForm() {
               >
                 再提交一份
               </button>
-            </div>
+            </motion.div>
           ) : (
-            <form className="space-y-5" onSubmit={handleSubmit} noValidate>
+            <motion.form
+              variants={motionItem}
+              className="space-y-5"
+              onSubmit={handleSubmit}
+              noValidate
+            >
               {submitError ? (
                 <div
                   role="alert"
@@ -284,10 +299,10 @@ export function RsvpForm() {
               <p className="text-center text-xs leading-5 text-ink-light">
                 提交后将保存您的回执信息 · 仅用于本场婚礼安排
               </p>
-            </form>
+            </motion.form>
           )}
-        </div>
+        </motion.div>
       </div>
-    </section>
+    </MotionSection>
   );
 }

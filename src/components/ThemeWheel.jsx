@@ -242,13 +242,13 @@ export function ThemeWheel({ themes, activeTheme, onChange }) {
               id="theme-onboarding-title"
               className="mt-2 text-display text-2xl font-light text-ink"
             >
-              先选一个喜欢的风格
+              选一个喜欢的您喜欢的色系
             </h2>
             <p
               id="theme-onboarding-desc"
               className="mx-auto mt-3 max-w-[17rem] text-sm leading-7 text-ink-soft"
             >
-              也可以决定是否播放背景音乐，再进入我们的邀请函。
+              进入我们的邀请函
             </p>
 
             <div className="theme-onboarding-swatches">

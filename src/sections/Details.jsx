@@ -1,12 +1,14 @@
+import { motion } from "framer-motion";
 import { CalendarDays, Clock3, MapPin } from "lucide-react";
 import { DetailRow } from "../components/DetailRow";
+import { MotionSection, motionItem } from "../components/MotionSection";
 import { MAP_QUERY, VENUE, WEDDING_DATE_FULL } from "../content/wedding";
 
 export function Details() {
   return (
-    <section className="px-5 pb-14 md:pb-16">
+    <MotionSection variant="spin" className="px-5 pb-14 md:pb-16">
       <div className="mx-auto max-w-xl">
-        <div className="text-center">
+        <motion.div variants={motionItem} className="text-center">
           <p className="text-eyebrow mb-3 text-xs text-champagne-600">
             Ceremony Details
           </p>
@@ -14,34 +16,43 @@ export function Details() {
             婚礼信息
           </h3>
           <span className="mt-4 inline-block h-px w-16 gold-line" />
-        </div>
+        </motion.div>
 
-        <div className="mt-8 rounded-[32px] border border-champagne-200/70 bg-ivory-50/90 p-8 shadow-soft backdrop-blur md:p-10">
+        <motion.div
+          variants={motionItem}
+          className="mt-8 rounded-[32px] border border-champagne-200/70 bg-ivory-50/90 p-8 shadow-soft backdrop-blur md:p-10"
+        >
           <div className="space-y-7">
-            <DetailRow
-              icon={<CalendarDays className="h-5 w-5" />}
-              label="Date"
-              title={WEDDING_DATE_FULL}
-              subtitle="星期六 · 盛夏良辰"
-            />
+            <motion.div variants={motionItem}>
+              <DetailRow
+                icon={<CalendarDays className="h-5 w-5" />}
+                label="Date"
+                title={WEDDING_DATE_FULL}
+                subtitle="星期六 · 盛夏良辰"
+              />
+            </motion.div>
 
             <div className="h-px gold-line" />
 
-            <DetailRow
-              icon={<Clock3 className="h-5 w-5" />}
-              label="Time"
-              title="仪式时间 16:30"
-              subtitle="15:10 起签到入园，可自由游园"
-            />
+            <motion.div variants={motionItem}>
+              <DetailRow
+                icon={<Clock3 className="h-5 w-5" />}
+                label="Time"
+                title="仪式时间 16:30"
+                subtitle="15:10 起签到入园，可自由游园"
+              />
+            </motion.div>
 
             <div className="h-px gold-line" />
 
-            <DetailRow
-              icon={<MapPin className="h-5 w-5" />}
-              label="Venue"
-              title={VENUE.name}
-              subtitle={VENUE.address}
-            />
+            <motion.div variants={motionItem}>
+              <DetailRow
+                icon={<MapPin className="h-5 w-5" />}
+                label="Venue"
+                title={VENUE.name}
+                subtitle={VENUE.address}
+              />
+            </motion.div>
           </div>
 
           <div className="mt-10 flex flex-col items-center gap-3">
@@ -58,8 +69,8 @@ export function Details() {
               高德 / 苹果地图均可识别 「{VENUE.shortAddress}」
             </p>
           </div>
-        </div>
+        </motion.div>
       </div>
-    </section>
+    </MotionSection>
   );
 }
