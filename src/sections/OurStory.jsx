@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { CornerFlourish, RingsIcon } from "../components/decor";
 import { MotionSection, motionItem } from "../components/MotionSection";
-import { storyPhoto } from "../lib/photos";
+import { storyPhotos } from "../lib/photos";
 
 export function OurStory() {
   return (
@@ -39,18 +39,22 @@ export function OurStory() {
           </div>
         </motion.div>
 
-        <motion.div
-          variants={motionItem}
-          className="relative -mx-5 aspect-video overflow-hidden border-y border-champagne-100 bg-champagne-100 shadow-soft md:mx-0 md:rounded-[32px] md:border"
-        >
-          <img
-            src={storyPhoto}
-            alt="我们的故事"
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-contain"
-          />
-          <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/50" />
+        <motion.div variants={motionItem} className="space-y-4 md:space-y-5">
+          {storyPhotos.map((photo, index) => (
+            <div
+              key={photo.src}
+              className="relative -mx-5 aspect-video overflow-hidden border-y border-champagne-100 bg-champagne-100 shadow-soft md:mx-0 md:rounded-[32px] md:border"
+            >
+              <img
+                src={photo.src}
+                alt={photo.alt}
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-cover object-center"
+              />
+              <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/50" />
+            </div>
+          ))}
         </motion.div>
       </div>
     </MotionSection>

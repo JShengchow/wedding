@@ -127,25 +127,6 @@ const CITY_MEMORIES = [
   },
 ];
 
-const SHENZHEN_STORY = [
-  {
-    title: "日常落脚",
-    desc: "下班后的晚饭、周末的散步，慢慢把城市过成我们的家。",
-  },
-  {
-    title: "朋友与家人",
-    desc: "许多见面、聚餐和祝福，都在这里有了具体的声音。",
-  },
-  {
-    title: "晚霞路线",
-    desc: "从海边到街角，很多没有计划的傍晚，反而最像生活。",
-  },
-  {
-    title: "婚礼起点",
-    desc: "最后回到深圳，把一路走来的故事，认真交给未来。",
-  },
-];
-
 function getFeatures(data) {
   if (data.type === "FeatureCollection") return data.features || [];
   if (data.type === "Feature") return [data];
@@ -580,39 +561,6 @@ export function MemoryMap() {
           </div>
         </article>
       </div>
-
-      <article className="mt-4 overflow-hidden rounded-[28px] border border-champagne-200/70 bg-gradient-to-r from-white/82 via-ivory-50/88 to-blush-50/45 p-5 shadow-sm md:mt-5 md:p-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div className="max-w-md">
-            <p className="inline-flex items-center gap-2 text-champagne-700">
-              <Heart className="h-4 w-4 fill-current" />
-              <span className="text-eyebrow text-[10px] md:text-[11px]">
-                Shenzhen Storyline
-              </span>
-            </p>
-            <p className="mt-2 text-xl text-ink md:text-2xl">深圳 · 把日子过成家</p>
-            <p className="mt-2 text-sm leading-7 text-ink-soft">
-              旅行地图记录远方，深圳这一条线记录生活本身：更多见面、晚霞、朋友和未来，都在这里慢慢长出来。
-            </p>
-          </div>
-        </div>
-
-        <ol className="mt-5 grid gap-3 md:grid-cols-4">
-          {SHENZHEN_STORY.map((item) => (
-            <li
-              key={item.title}
-              className="relative rounded-2xl border border-champagne-100/80 bg-white/65 p-4"
-            >
-              <span
-                aria-hidden="true"
-                className="block h-1 w-8 rounded-full bg-gradient-to-r from-champagne-300 to-blush-300"
-              />
-              <p className="mt-2 text-base text-ink">{item.title}</p>
-              <p className="mt-1.5 text-xs leading-6 text-ink-light">{item.desc}</p>
-            </li>
-          ))}
-        </ol>
-      </article>
     </div>
   );
 }

@@ -1,7 +1,3 @@
-import features01 from "../assets/photos/features-01.webp";
-import features02 from "../assets/photos/features-02.webp";
-import features03 from "../assets/photos/features-03.webp";
-import features04 from "../assets/photos/features-04.webp";
 import gallery01 from "../assets/photos/gallery-01.webp";
 import gallery02 from "../assets/photos/gallery-02.webp";
 import gallery03 from "../assets/photos/gallery-03.webp";
@@ -30,8 +26,8 @@ import hero01Cover from "../assets/photos/hero-01-cover.webp";
 import kapian01 from "../assets/photos/kapian-01.webp";
 import kapian02 from "../assets/photos/kapian-02.webp";
 import kapian03 from "../assets/photos/kapian-03.webp";
+import kunbo06 from "../assets/photos/kunbo-06.webp";
 import lunbo01 from "../assets/photos/lunbo-01.webp";
-import lunbo02 from "../assets/photos/lunbo-02.webp";
 import lunbo03 from "../assets/photos/lunbo-03.webp";
 import lunbo04 from "../assets/photos/lunbo-04.webp";
 import lunbo05 from "../assets/photos/lunbo-05.webp";
@@ -42,6 +38,19 @@ import photowall015 from "../assets/photos/photowall-015.webp";
 import photowall016 from "../assets/photos/photowall-016.webp";
 import photowall017 from "../assets/photos/photowall-017.webp";
 import story01Open from "../assets/photos/story-01-open.webp";
+import story02Open from "../assets/photos/story-02-open.webp";
+import fashi01 from "../assets/photos/fashi-01.webp";
+import fashi02 from "../assets/photos/fashi-02.webp";
+import fashi03 from "../assets/photos/fashi-03.webp";
+import fashi04 from "../assets/photos/fashi-04.webp";
+import fashi05 from "../assets/photos/fashi-05.webp";
+import fashi06 from "../assets/photos/fashi-06.webp";
+import fashi07 from "../assets/photos/fashi-07.webp";
+import fashi08 from "../assets/photos/fashi-08.webp";
+import sunset01 from "../assets/photos/sunset-01.webp";
+import sunset02 from "../assets/photos/sunset-02.webp";
+import sunset03 from "../assets/photos/sunset-03.webp";
+import sunset04 from "../assets/photos/sunset-04.webp";
 
 const galleryAssets = [
   gallery01,
@@ -70,12 +79,17 @@ const galleryAssets = [
   gallery24,
 ];
 
-const featureAssets = [
-  { src: features02, name: "features-01" },
-  { src: features03, name: "features-02" },
-  { src: features01, name: "features-03" },
-  { src: features04, name: "features-04" },
+const fashiAssets = [
+  fashi01,
+  fashi02,
+  fashi03,
+  fashi04,
+  fashi05,
+  fashi06,
+  fashi07,
+  fashi08,
 ];
+const sunsetAssets = [sunset01, sunset02, sunset03, sunset04];
 const photoWallAssets = [
   { src: photowall017, name: "photowall-017" },
   { src: photowall012, name: "photowall-012" },
@@ -89,7 +103,7 @@ const polaroidAssets = [
   { src: kapian02, name: "kapian-02" },
   { src: kapian03, name: "kapian-03" },
 ];
-const carouselAssets = [lunbo01, lunbo02, lunbo03, lunbo04, lunbo05];
+const carouselAssets = [lunbo01, kunbo06, lunbo03, lunbo04, lunbo05];
 const travelPhotoModules = import.meta.glob("../assets/photos/travel-*.webp", {
   eager: true,
   import: "default",
@@ -110,9 +124,19 @@ export const heroPhoto = hero01Cover;
 
 export const storyPhoto = story01Open;
 
-export const featurePhotos = featureAssets.map((photo) => ({
-  src: photo.src,
-  alt: `婚纱照精选 ${photo.name}`,
+export const storyPhotos = [
+  { src: story01Open, alt: "我们的故事" },
+  { src: story02Open, alt: "我们的故事 · 日落时分" },
+];
+
+export const fashiPhotos = fashiAssets.map((src, index) => ({
+  src,
+  alt: `法式复古婚纱照 ${index + 1}`,
+}));
+
+export const sunsetPhotos = sunsetAssets.map((src, index) => ({
+  src,
+  alt: `日落婚纱照 ${index + 1}`,
 }));
 
 export const photoWallPhotos = photoWallAssets.map((photo) => ({

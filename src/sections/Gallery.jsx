@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { MemoryMap } from "../components/MemoryMap";
 import { MotionSection, motionItem, scatterItem } from "../components/MotionSection";
+import { FashiGallery } from "./FashiGallery";
 import { carouselPhotos, photoWallPhotos, polaroidPhotos } from "../lib/photos";
 
 const MEMORY_STILLS = [
@@ -431,6 +432,8 @@ export function Gallery() {
             })}
           </div>
         </motion.article>
+
+        <FashiGallery />
 
         <motion.article
           variants={motionItem}

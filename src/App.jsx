@@ -3,7 +3,7 @@ import { ThemeWheel } from "./components/ThemeWheel";
 import { Countdown } from "./sections/Countdown";
 import { Details } from "./sections/Details";
 import { DressCode } from "./sections/DressCode";
-import { FeaturePhotos } from "./sections/FeaturePhotos";
+import { SunsetPhotos } from "./sections/SunsetPhotos";
 import { Footer } from "./sections/Footer";
 import { Gallery } from "./sections/Gallery";
 import { Hero } from "./sections/Hero";
@@ -87,7 +87,7 @@ export default function WeddingInvitationH5() {
       <Vow />
       <RsvpForm />
       <DressCode />
-      <FeaturePhotos />
+      <SunsetPhotos />
       <Gallery />
       <Footer />
     </div>

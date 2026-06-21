@@ -14,17 +14,36 @@ const LEGACY_SOURCE_DIR = path.join(projectRoot, "src", "assets");
 const OUTPUT_DIR = path.join(projectRoot, "src", "assets", "photos");
 const LONG_EDGE = 1200;
 const QUALITY = 75;
+const HIGH_DETAIL_LONG_EDGE = 1600;
+const HIGH_DETAIL_QUALITY = 88;
+const HIGH_DETAIL_NAMES = new Set([
+  "fashi-02",
+  "fashi-06",
+  "fashi-07",
+  "fashi-08",
+]);
 const SOURCE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png"]);
+
+function getOutputSettings(base) {
+  if (HIGH_DETAIL_NAMES.has(base)) {
+    return {
+      longEdge: HIGH_DETAIL_LONG_EDGE,
+      quality: HIGH_DETAIL_QUALITY,
+    };
+  }
+
+  return { longEdge: LONG_EDGE, quality: QUALITY };
+}
 
 function isUpToDate(srcMtime, outMtime) {
   return outMtime.getTime() >= srcMtime.getTime();
 }
 
 async function processOne(srcPath) {
-  const ext = path.extname(srcPath).toLowerCase();
+  const { ext: rawExt, name: base } = path.parse(srcPath);
+  const ext = rawExt.toLowerCase();
   if (!SOURCE_EXTENSIONS.has(ext)) return null;
 
-  const base = path.basename(srcPath, ext);
   const outPath = path.join(OUTPUT_DIR, `${base}.webp`);
 
   const srcStat = await stat(srcPath);
@@ -35,15 +54,17 @@ async function processOne(srcPath) {
     }
   }
 
+  const { longEdge, quality } = getOutputSettings(base);
+
   await sharp(srcPath)
     .rotate()
     .resize({
-      width: LONG_EDGE,
-      height: LONG_EDGE,
+      width: longEdge,
+      height: longEdge,
       fit: "inside",
       withoutEnlargement: true,
     })
-    .webp({ quality: QUALITY })
+    .webp({ quality, effort: 6 })
     .toFile(outPath);
 
   const outStat = await stat(outPath);

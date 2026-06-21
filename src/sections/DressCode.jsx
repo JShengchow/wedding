@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { MotionSection, motionItem } from "../components/MotionSection";
-import dressCodePoster from "../assets/photos/dress-code.png";
+import dressCodePoster from "../assets/photos/dress-code.webp";
 
 export function DressCode() {
   return (
