@@ -74,18 +74,18 @@ function LookbookFrame({ photo, still }) {
   return (
     <motion.figure
       variants={portraitItem}
-      className={`group w-[86%] ${still.side === "right" ? "ml-auto" : ""} ${
+      className={`group w-[82%] ${still.side === "right" ? "ml-auto" : ""} ${
         still.featured ? "md:w-[94%]" : ""
       }`}
     >
       <div className="overflow-hidden rounded-[20px] border border-white/70 bg-champagne-100 shadow-soft transition duration-500 group-hover:shadow-warm md:rounded-[26px]">
-        <div className="aspect-[3/4] w-full overflow-hidden">
+        <div className="aspect-[2/3] w-full overflow-hidden">
           <img
             src={photo.src}
             alt={photo.alt}
             loading="lazy"
             decoding="async"
-            className={`block h-full w-full object-cover ${still.objectPosition ?? "object-center"}`}
+            className={`block h-full w-full scale-[1.02] object-cover ${still.objectPosition ?? "object-center"}`}
           />
         </div>
       </div>

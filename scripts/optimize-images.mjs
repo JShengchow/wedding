@@ -14,26 +14,7 @@ const LEGACY_SOURCE_DIR = path.join(projectRoot, "src", "assets");
 const OUTPUT_DIR = path.join(projectRoot, "src", "assets", "photos");
 const LONG_EDGE = 1200;
 const QUALITY = 75;
-const HIGH_DETAIL_LONG_EDGE = 1600;
-const HIGH_DETAIL_QUALITY = 88;
-const HIGH_DETAIL_NAMES = new Set([
-  "fashi-02",
-  "fashi-06",
-  "fashi-07",
-  "fashi-08",
-]);
 const SOURCE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png"]);
-
-function getOutputSettings(base) {
-  if (HIGH_DETAIL_NAMES.has(base)) {
-    return {
-      longEdge: HIGH_DETAIL_LONG_EDGE,
-      quality: HIGH_DETAIL_QUALITY,
-    };
-  }
-
-  return { longEdge: LONG_EDGE, quality: QUALITY };
-}
 
 function isUpToDate(srcMtime, outMtime) {
   return outMtime.getTime() >= srcMtime.getTime();
@@ -54,17 +35,15 @@ async function processOne(srcPath) {
     }
   }
 
-  const { longEdge, quality } = getOutputSettings(base);
-
   await sharp(srcPath)
     .rotate()
     .resize({
-      width: longEdge,
-      height: longEdge,
+      width: LONG_EDGE,
+      height: LONG_EDGE,
       fit: "inside",
       withoutEnlargement: true,
     })
-    .webp({ quality, effort: 6 })
+    .webp({ quality: QUALITY, effort: 6 })
     .toFile(outPath);
 
   const outStat = await stat(outPath);
