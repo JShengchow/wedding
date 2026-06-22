@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Music2, Palette, Sparkles } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ClipboardPen, Music2, Palette, Sparkles } from "lucide-react";
+import { useRsvpUI } from "../context/RsvpUIContext";
 import { BGM_SRC } from "../content/wedding";
 
 const AUTO_CLOSE_MS = 5000;
@@ -12,6 +14,8 @@ function getInitialTop() {
 }
 
 export function ThemeWheel({ themes, activeTheme, onChange }) {
+  const { showFloatingPrompt, submitted, openModal } = useRsvpUI();
+  const showRsvpPrompt = showFloatingPrompt && !submitted;
   const active = themes.find((item) => item.id === activeTheme) || themes[0];
   const audioRef = useRef(null);
   const dockRef = useRef(null);
@@ -305,19 +309,46 @@ export function ThemeWheel({ themes, activeTheme, onChange }) {
       >
         <audio ref={audioRef} loop preload="none" src={BGM_SRC} />
 
-        <button
-          type="button"
-          onClick={handleTriggerClick}
-          onPointerDown={handleDragStart}
-          onPointerMove={handleDragMove}
-          onPointerUp={handleDragEnd}
-          onPointerCancel={handleDragEnd}
-          className="floating-dock-trigger"
-          aria-label={open ? "主题与音乐控制入口" : "展开主题与音乐控制"}
-          title={open ? "主题与音乐" : "展开控制"}
-        >
-          <Sparkles className="h-4 w-4" />
-        </button>
+        <div className="floating-dock-triggers">
+          <button
+            type="button"
+            onClick={handleTriggerClick}
+            onPointerDown={handleDragStart}
+            onPointerMove={handleDragMove}
+            onPointerUp={handleDragEnd}
+            onPointerCancel={handleDragEnd}
+            className="floating-dock-trigger"
+            aria-label={open ? "主题与音乐控制入口" : "展开主题与音乐控制"}
+            title={open ? "主题与音乐" : "展开控制"}
+          >
+            <Sparkles className="h-4 w-4" />
+          </button>
+
+          <AnimatePresence>
+            {showRsvpPrompt ? (
+              <motion.button
+                key="rsvp-prompt"
+                type="button"
+                initial={{ opacity: 0, x: 14, scale: 0.72 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 10, scale: 0.8 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 420,
+                  damping: 24,
+                  mass: 0.7,
+                }}
+                className="floating-dock-trigger floating-dock-trigger-rsvp"
+                aria-label="填写宾客回执"
+                title="填写回执"
+                onClick={openModal}
+              >
+                <ClipboardPen className="h-4 w-4" />
+                <span className="floating-dock-trigger-rsvp-ring" aria-hidden="true" />
+              </motion.button>
+            ) : null}
+          </AnimatePresence>
+        </div>
 
         <div className="floating-dock-panel" onPointerDownCapture={markActivity}>
           <div className="floating-dock-row">

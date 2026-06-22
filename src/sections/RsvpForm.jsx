@@ -1,308 +1,137 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { AlertCircle, Heart, LoaderCircle } from "lucide-react";
-import { Field } from "../components/Field";
+import { useRsvpUI } from "../context/RsvpUIContext";
+import { RsvpCard, RsvpSectionIntro } from "../components/RsvpCard";
+import { RsvpFormBody, RsvpSuccessBody } from "../components/RsvpFormBody";
+import { RsvpModal } from "../components/RsvpModal";
 import { MotionSection, motionItem } from "../components/MotionSection";
-import { submitRsvp } from "../lib/supabase";
-
-const INITIAL_FORM = {
-  name: "",
-  phone: "",
-  attendance: "attend",
-  guests: "1",
-  message: "",
-  hp: "",
-};
-
-const ATTENDANCE_OPTIONS = [
-  { value: "attend", label: "出席" },
-  { value: "absent", label: "无法出席" },
-];
-
-const GUEST_OPTIONS = [
-  { value: "1", label: "1 人" },
-  { value: "2", label: "2 人" },
-  { value: "3", label: "3 人" },
-  { value: "4", label: "4 人" },
-  { value: "5+", label: "5 人及以上" },
-];
-
-const SUBMIT_THROTTLE_MS = 10 * 1000;
-
-function getSubmitErrorMessage(error) {
-  const code = error?.code || "";
-
-  switch (code) {
-    case "too_many_requests":
-      return "提交过于频繁，请稍候再试。";
-    case "bad_name":
-      return "请填写姓名（1 - 40 个字符）。";
-    case "bad_phone":
-      return "请填写有效的联系电话（6 - 20 位）。";
-    case "bad_attendance":
-      return "请选择出席状态。";
-    case "bad_guests":
-    case "bad_guests_for_absent":
-      return "请选择出席人数。";
-    case "bad_message":
-      return "留言长度请控制在 500 字以内。";
-    case "bad_body":
-      return "提交内容格式异常，请刷新后重试。";
-    case "network_error":
-      return "网络连接异常，已为您临时保存，稍后请再试。";
-    case "server_error":
-      return "服务暂时不可用，请稍后再试，或直接联系新人确认回执。";
-    default:
-      return "提交暂时失败，请稍后再试，或直接联系新人确认回执。";
-  }
-}
+import { useRsvpForm } from "../hooks/useRsvpForm";
 
 export function RsvpForm() {
-  const [form, setForm] = useState(INITIAL_FORM);
-  const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [submitError, setSubmitError] = useState("");
-  const lastSubmittedAt = useRef(0);
+  const sectionRef = useRef(null);
+  const {
+    modalOpen,
+    closeModal,
+    setShowFloatingPrompt,
+    setSubmitted: setGlobalSubmitted,
+  } = useRsvpUI();
 
-  const updateField = (key) => (event) => {
-    const { value } = event.target;
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
+  const rsvp = useRsvpForm({
+    onSubmitted: () => {
+      setGlobalSubmitted(true);
+      closeModal();
+    },
+  });
 
-  const setAttendance = (value) => {
-    setForm((prev) => ({ ...prev, attendance: value }));
-  };
+  const {
+    form,
+    loading,
+    submitted,
+    submitError,
+    isAbsent,
+    updateField,
+    setAttendance,
+    reset,
+    handleSubmit,
+  } = rsvp;
 
-  const reset = () => {
-    setSubmitted(false);
-    setSubmitError("");
-    setForm(INITIAL_FORM);
-  };
+  useEffect(() => {
+    setGlobalSubmitted(submitted);
+  }, [submitted, setGlobalSubmitted]);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setSubmitError("");
-
-    if (form.hp) {
-      setSubmitted(true);
-      return;
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section || submitted) {
+      setShowFloatingPrompt(false);
+      return undefined;
     }
 
-    const now = Date.now();
-    if (now - lastSubmittedAt.current < SUBMIT_THROTTLE_MS) {
-      return;
-    }
+    const updatePrompt = () => {
+      const rect = section.getBoundingClientRect();
+      const scrolledPast = rect.bottom < window.innerHeight * 0.35;
+      setShowFloatingPrompt(scrolledPast);
+    };
 
-    if (!form.name.trim() || !form.phone.trim()) {
-      setSubmitError("请填写姓名与联系电话");
-      return;
-    }
+    updatePrompt();
 
-    const isAbsent = form.attendance === "absent";
+    const observer = new IntersectionObserver(
+      () => {
+        updatePrompt();
+      },
+      { threshold: [0, 0.1, 0.25] },
+    );
 
-    try {
-      setLoading(true);
-      await submitRsvp({
-        name: form.name.trim(),
-        phone: form.phone.trim(),
-        attendance: form.attendance,
-        guests: isAbsent ? "0" : form.guests,
-        message: form.message,
-      });
-      lastSubmittedAt.current = Date.now();
-      setSubmitted(true);
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error(error);
-      }
-      setSubmitError(getSubmitErrorMessage(error));
-    } finally {
-      setLoading(false);
-    }
+    observer.observe(section);
+    window.addEventListener("scroll", updatePrompt, { passive: true });
+    window.addEventListener("resize", updatePrompt);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", updatePrompt);
+      window.removeEventListener("resize", updatePrompt);
+    };
+  }, [submitted, setShowFloatingPrompt]);
+
+  const handleReset = () => {
+    reset();
+    setGlobalSubmitted(false);
   };
-
-  const isAbsent = form.attendance === "absent";
 
   return (
-    <MotionSection variant="fade" stagger={0.1} className="px-5 pb-16 md:pb-20">
-      <div className="mx-auto max-w-xl">
-        <motion.div variants={motionItem} className="text-center">
-          <p className="text-eyebrow mb-3 text-xs text-champagne-600">RSVP</p>
-          <h3 className="text-display text-3xl font-light text-ink md:text-4xl">
-            宾客回执
-          </h3>
-          <span className="mt-4 inline-block h-px w-16 gold-line" />
-          <p className="mx-auto mt-4 max-w-sm text-sm leading-7 text-ink-soft">
-            您的回执将帮助我们更好地安排座席与接待
-          </p>
-        </motion.div>
+    <>
+      <MotionSection
+        ref={sectionRef}
+        variant="fade"
+        stagger={0.1}
+        className="px-5 pb-16 md:pb-20"
+      >
+        <div className="mx-auto max-w-xl">
+          <motion.div variants={motionItem}>
+            <RsvpSectionIntro />
+          </motion.div>
 
-        <motion.div
-          variants={motionItem}
-          className="mt-8 rounded-[32px] border border-champagne-200/70 bg-ivory-50/95 p-6 shadow-soft backdrop-blur md:p-10"
-        >
-          {submitted ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 16 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-              className="py-6 text-center"
-            >
-              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-blush-100 to-champagne-100 ring-1 ring-champagne-200">
-                <Heart className="h-9 w-9 text-blush-500" />
-              </div>
-              <h3 className="text-display mb-3 text-2xl font-light text-ink md:text-3xl">
-                感谢您的回执
-              </h3>
-              <p className="mx-auto max-w-md text-sm leading-8 text-ink-soft md:text-base">
-                我们已经收到您的出席信息，
-                <br className="md:hidden" />
-                期待在这个夏日午后与您相见。
-              </p>
-              <button
-                type="button"
-                onClick={reset}
-                className="mt-8 inline-flex items-center justify-center rounded-full border border-champagne-300 bg-white px-6 py-3 text-sm text-champagne-700 shadow-sm transition active:scale-[0.98]"
-              >
-                再提交一份
-              </button>
-            </motion.div>
-          ) : (
-            <motion.form
-              variants={motionItem}
-              className="space-y-5"
-              onSubmit={handleSubmit}
-              noValidate
-            >
-              {submitError ? (
-                <div
-                  role="alert"
-                  className="flex gap-3 rounded-2xl border border-blush-300 bg-blush-50 px-4 py-3 text-sm leading-6 text-blush-500"
+          <motion.div variants={motionItem}>
+            <RsvpCard className="mt-8">
+              {submitted ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 16 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
-                  <p>{submitError}</p>
-                </div>
-              ) : null}
-
-              <div aria-hidden="true" className="absolute left-[-9999px]">
-                <label>
-                  Company
-                  <input
-                    type="text"
-                    tabIndex={-1}
-                    autoComplete="off"
-                    value={form.hp}
-                    onChange={updateField("hp")}
+                  <RsvpSuccessBody onReset={handleReset} />
+                </motion.div>
+              ) : (
+                <motion.div variants={motionItem}>
+                  <RsvpFormBody
+                    idPrefix="rsvp-inline"
+                    form={form}
+                    loading={loading}
+                    submitError={submitError}
+                    isAbsent={isAbsent}
+                    updateField={updateField}
+                    setAttendance={setAttendance}
+                    handleSubmit={handleSubmit}
                   />
-                </label>
-              </div>
-
-              <Field label="您的姓名">
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={updateField("name")}
-                  placeholder="请输入您的称呼"
-                  autoComplete="name"
-                  maxLength={40}
-                  className="w-full rounded-2xl border border-champagne-200 bg-white px-5 py-4 text-base outline-none transition focus:border-champagne-400 focus:ring-2 focus:ring-champagne-200"
-                />
-              </Field>
-
-              <Field label="联系电话">
-                <input
-                  type="tel"
-                  value={form.phone}
-                  onChange={updateField("phone")}
-                  placeholder="便于新人联系"
-                  autoComplete="tel"
-                  inputMode="tel"
-                  maxLength={20}
-                  className="w-full rounded-2xl border border-champagne-200 bg-white px-5 py-4 text-base outline-none transition focus:border-champagne-400 focus:ring-2 focus:ring-champagne-200"
-                />
-              </Field>
-
-              <div>
-                <label className="mb-2 block text-sm text-ink-soft">
-                  是否出席
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  {ATTENDANCE_OPTIONS.map((opt) => {
-                    const active = form.attendance === opt.value;
-                    return (
-                      <label
-                        key={opt.value}
-                        className={`flex cursor-pointer items-center justify-center gap-2 rounded-2xl border px-4 py-4 text-base transition ${
-                          active
-                            ? "border-champagne-400 bg-gradient-to-br from-champagne-50 to-blush-50 text-champagne-700 shadow-sm"
-                            : "border-champagne-200 bg-white text-ink-soft"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="attendance"
-                          value={opt.value}
-                          checked={active}
-                          onChange={() => setAttendance(opt.value)}
-                          className="sr-only"
-                        />
-                        {active ? <Heart className="h-4 w-4" /> : null}
-                        <span>{opt.label}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {isAbsent ? null : (
-                <Field label="出席人数">
-                  <select
-                    value={form.guests}
-                    onChange={updateField("guests")}
-                    className="w-full rounded-2xl border border-champagne-200 bg-white px-5 py-4 text-base outline-none transition focus:border-champagne-400 focus:ring-2 focus:ring-champagne-200"
-                  >
-                    {GUEST_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
+                </motion.div>
               )}
+            </RsvpCard>
+          </motion.div>
+        </div>
+      </MotionSection>
 
-              <Field label="留言祝福（可选）">
-                <textarea
-                  value={form.message}
-                  onChange={updateField("message")}
-                  rows={3}
-                  placeholder="写下您想说的话～"
-                  maxLength={500}
-                  className="w-full resize-none rounded-2xl border border-champagne-200 bg-white px-5 py-4 text-base outline-none transition focus:border-champagne-400 focus:ring-2 focus:ring-champagne-200"
-                />
-              </Field>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-champagne-400 via-champagne-500 to-champagne-600 py-4 text-base tracking-wider text-white shadow-warm transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70 md:text-lg"
-              >
-                {loading ? (
-                  <>
-                    <LoaderCircle className="h-5 w-5 animate-spin" />
-                    提交中
-                  </>
-                ) : (
-                  "提交回执"
-                )}
-              </button>
-
-              <p className="text-center text-xs leading-5 text-ink-light">
-                提交后将保存您的回执信息 · 仅用于本场婚礼安排
-              </p>
-            </motion.form>
-          )}
-        </motion.div>
-      </div>
-    </MotionSection>
+      <RsvpModal
+        isOpen={modalOpen}
+        onClose={closeModal}
+        form={form}
+        loading={loading}
+        submitted={submitted}
+        submitError={submitError}
+        isAbsent={isAbsent}
+        updateField={updateField}
+        setAttendance={setAttendance}
+        reset={handleReset}
+        handleSubmit={handleSubmit}
+      />
+    </>
   );
 }

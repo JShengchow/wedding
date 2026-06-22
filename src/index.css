@@ -1096,10 +1096,22 @@ body {
     inset 0 1px 0 rgb(var(--c-ivory-50) / 0.62);
 }
 
-.floating-dock-trigger {
+.floating-dock-triggers {
   position: absolute;
   left: -36px;
   top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.floating-dock.side-left .floating-dock-triggers {
+  left: auto;
+  right: -36px;
+}
+
+.floating-dock-trigger {
+  position: relative;
   width: 36px;
   height: 36px;
   border: 1px solid rgb(var(--c-champagne-300) / 0.5);
@@ -1123,11 +1135,48 @@ body {
 }
 
 .floating-dock.side-left .floating-dock-trigger {
-  left: auto;
-  right: -36px;
   border-right: 1px solid rgb(var(--c-champagne-300) / 0.5);
   border-left: 0;
   border-radius: 0 12px 12px 0;
+}
+
+.floating-dock-trigger-rsvp {
+  color: rgb(var(--c-ivory-50) / 1);
+  border-color: rgb(var(--c-champagne-500) / 0.72);
+  background: linear-gradient(
+    145deg,
+    rgb(var(--c-champagne-500) / 0.96) 0%,
+    rgb(var(--c-champagne-700) / 0.95) 100%
+  );
+  box-shadow:
+    0 14px 28px -16px rgb(var(--c-champagne-700) / 0.72),
+    inset 0 1px 0 rgb(var(--c-ivory-50) / 0.35);
+}
+
+.floating-dock-trigger-rsvp-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 1.5px solid rgb(var(--c-champagne-400) / 0.75);
+  animation: rsvp-prompt-ring 2.4s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes rsvp-prompt-ring {
+  0% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+
+  70% {
+    opacity: 0;
+    transform: scale(1.28);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.28);
+  }
 }
 
 .floating-dock-row {
@@ -1217,14 +1266,17 @@ body {
     padding: 9px 8px 9px 10px;
   }
 
-  .floating-dock-trigger {
+  .floating-dock-triggers {
     left: -34px;
-    width: 34px;
-    height: 34px;
   }
 
-  .floating-dock.side-left .floating-dock-trigger {
+  .floating-dock.side-left .floating-dock-triggers {
     right: -34px;
+  }
+
+  .floating-dock-trigger {
+    width: 34px;
+    height: 34px;
   }
 
 }

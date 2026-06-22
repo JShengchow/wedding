@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ThemeWheel } from "./components/ThemeWheel";
+import { RsvpUIProvider } from "./context/RsvpUIContext";
 import { Countdown } from "./sections/Countdown";
 import { Details } from "./sections/Details";
 import { DressCode } from "./sections/DressCode";
@@ -68,28 +69,30 @@ export default function WeddingInvitationH5() {
   }, [theme]);
 
   return (
-    <div
-      className={`theme-app theme-${theme} relative min-h-screen overflow-hidden bg-ivory text-ink`}
-    >
+    <RsvpUIProvider>
       <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 bg-petal-radial opacity-70"
-      />
+        className={`theme-app theme-${theme} relative min-h-screen overflow-hidden bg-ivory text-ink`}
+      >
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 bg-petal-radial opacity-70"
+        />
 
-      <ThemeWheel themes={THEMES} activeTheme={theme} onChange={setTheme} />
+        <ThemeWheel themes={THEMES} activeTheme={theme} onChange={setTheme} />
 
-      <Hero />
-      <Countdown />
-      <Invitation />
-      <OurStory />
-      <Details />
-      <Schedule />
-      <Vow />
-      <RsvpForm />
-      <DressCode />
-      <SunsetPhotos />
-      <Gallery />
-      <Footer />
-    </div>
+        <Hero />
+        <Countdown />
+        <Invitation />
+        <OurStory />
+        <Details />
+        <Schedule />
+        <Vow />
+        <RsvpForm />
+        <DressCode />
+        <SunsetPhotos />
+        <Gallery />
+        <Footer />
+      </div>
+    </RsvpUIProvider>
   );
 }

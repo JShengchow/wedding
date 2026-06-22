@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 const EASE = [0.22, 1, 0.36, 1];
@@ -56,16 +57,19 @@ export const scatterItem = {
   show: { opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 },
 };
 
-export function MotionSection({
-  as = "section",
-  children,
-  className = "",
-  delay = 0,
-  once = true,
-  stagger = 0.08,
-  variant = "rise",
-  viewportAmount = 0.24,
-}) {
+export const MotionSection = forwardRef(function MotionSection(
+  {
+    as = "section",
+    children,
+    className = "",
+    delay = 0,
+    once = true,
+    stagger = 0.08,
+    variant = "rise",
+    viewportAmount = 0.24,
+  },
+  ref,
+) {
   const prefersReducedMotion = useReducedMotion();
   const variants = prefersReducedMotion
     ? REDUCED_VARIANTS
@@ -86,6 +90,7 @@ export function MotionSection({
 
   return (
     <Component
+      ref={ref}
       className={className}
       initial="hidden"
       whileInView="show"
@@ -95,4 +100,4 @@ export function MotionSection({
       {children}
     </Component>
   );
-}
+});
