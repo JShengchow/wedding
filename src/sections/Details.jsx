@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { CalendarDays, MapPin } from "lucide-react";
 import { DetailRow } from "../components/DetailRow";
 import { MotionSection, motionItem } from "../components/MotionSection";
+import { ParallelLines } from "../components/ParallelLines";
 import { MAP_QUERY, VENUE, WEDDING_DATE_FULL } from "../content/wedding";
 
 export function Details() {
@@ -16,6 +17,14 @@ export function Details() {
             婚礼信息
           </h3>
           <span className="mt-4 inline-block h-px w-16 gold-line" />
+        </motion.div>
+
+        <motion.div variants={motionItem} className="mt-8 md:mt-10">
+          <ParallelLines />
+        </motion.div>
+
+        <motion.div variants={motionItem} className="mt-8 md:mt-10">
+          <div className="h-px gold-line" />
         </motion.div>
 
         <motion.div

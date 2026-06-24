@@ -4,7 +4,8 @@
 
 ## 页面图片
 
-- `hero-01-cover.webp`: 首屏全屏背景图。
+- `hero-01-cover.png`: 首屏全屏背景图（原图，不压缩）。
+- `childhood-groom.png`、`childhood-bride.jpg`: 「婚礼信息」童年照模块。
 - `story-01-open.webp`: “爱情与友情”模块右侧图片。
 - `lunbo-01.webp` 至 `lunbo-05.webp`: “浪漫瞬间”顶部轮播专用图。
 - `gallery-01.webp` 至 `gallery-24.webp`: “浪漫瞬间”、回忆曲线、旅行地图共用的相册图。

@@ -22,7 +22,9 @@ import gallery21 from "../assets/photos/gallery-21.webp";
 import gallery22 from "../assets/photos/gallery-22.webp";
 import gallery23 from "../assets/photos/gallery-23.webp";
 import gallery24 from "../assets/photos/gallery-24.webp";
-import hero01Cover from "../assets/photos/hero-01-cover.webp";
+import childhoodBride from "../assets/photos/childhood-bride.jpg";
+import childhoodGroom from "../assets/photos/childhood-groom.png";
+import hero01Cover from "../assets/photos/hero-01-cover.png";
 import kapian01 from "../assets/photos/kapian-01.webp";
 import kapian02 from "../assets/photos/kapian-02.webp";
 import kapian03 from "../assets/photos/kapian-03.webp";
@@ -121,6 +123,11 @@ function makeTravelPhotos(city, names) {
 }
 
 export const heroPhoto = hero01Cover;
+
+export const parallelPhotos = {
+  groom: childhoodGroom,
+  bride: childhoodBride,
+};
 
 export const storyPhoto = story01Open;
 
