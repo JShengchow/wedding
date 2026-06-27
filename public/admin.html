@@ -478,7 +478,21 @@
       }
 
       function formatTime(value) {
-        return escapeHtml(String(value || "").replace("T", " ").slice(0, 16));
+        if (!value) return "—";
+        const raw = String(value).trim();
+        let date;
+        if (raw.includes("T")) {
+          date = new Date(raw);
+        } else {
+          date = new Date(raw.replace(" ", "T") + "Z");
+        }
+        if (Number.isNaN(date.getTime())) {
+          return escapeHtml(raw.replace("T", " ").slice(0, 16));
+        }
+        const text = date
+          .toLocaleString("sv-SE", { timeZone: "Asia/Shanghai" })
+          .slice(0, 16);
+        return escapeHtml(text);
       }
 
       function renderBreakdown(containerId, stats, labels, prefix) {
@@ -619,7 +633,7 @@
             '</td><td class="msg">' +
             escapeHtml(r.message || "") +
             "</td><td>" +
-            escapeHtml((r.created_at || "").replace("T", " ").slice(0, 16)) +
+            formatTime(r.created_at) +
             "</td>";
           tbody.appendChild(tr);
         }

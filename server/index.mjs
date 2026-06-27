@@ -261,14 +261,15 @@ const recordVisitTx = db.transaction(
     }
 
     db.prepare(`
-      INSERT INTO wedding_visit (visitor_id, theme, audio_mode, ip, ua)
-      VALUES (@visitorId, @theme, @audioMode, @ip, @ua)
+      INSERT INTO wedding_visit (visitor_id, theme, audio_mode, ip, ua, created_at)
+      VALUES (@visitorId, @theme, @audioMode, @ip, @ua, @ts)
     `).run({
       visitorId,
       theme,
       audioMode,
       ip,
       ua,
+      ts,
     });
 
     return db
