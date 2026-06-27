@@ -318,6 +318,7 @@
                 <th>次数</th>
                 <th>最近色系</th>
                 <th>最近进入</th>
+                <th>来源</th>
                 <th>最后访问</th>
               </tr>
             </thead>
@@ -367,6 +368,7 @@
                 <th>出席</th>
                 <th>人数</th>
                 <th>留言</th>
+                <th>来源</th>
                 <th>提交时间</th>
               </tr>
             </thead>
@@ -495,6 +497,17 @@
         return escapeHtml(text);
       }
 
+      function formatIpSource(ip, location) {
+        if (!ip) return "—";
+        const loc = location || "未知";
+        return (
+          escapeHtml(ip) +
+          '<div class="muted">' +
+          escapeHtml(loc) +
+          "</div>"
+        );
+      }
+
       function renderBreakdown(containerId, stats, labels, prefix) {
         const container = $(containerId);
         container.innerHTML = "";
@@ -558,13 +571,15 @@
             "</td><td>" +
             escapeHtml(audioLabel[visitor.lastAudioMode] || visitor.lastAudioMode || "—") +
             "</td><td>" +
+            formatIpSource(visitor.lastIp, visitor.lastIpLocation) +
+            "</td><td>" +
             formatTime(visitor.lastSeenAt) +
             "</td>";
 
           const timelineRow = document.createElement("tr");
           timelineRow.hidden = true;
           const timelineCell = document.createElement("td");
-          timelineCell.colSpan = 5;
+          timelineCell.colSpan = 6;
 
           const visits = visitor.visits || [];
           if (!visits.length) {
@@ -580,10 +595,12 @@
                 escapeHtml(themeLabel[visit.theme] || visit.theme) +
                 "</td><td>" +
                 escapeHtml(audioLabel[visit.audioMode] || visit.audioMode) +
+                "</td><td>" +
+                formatIpSource(visit.ip, visit.ipLocation) +
                 "</td></tr>";
             }
             timelineCell.innerHTML =
-              '<div class="visit-timeline"><table><thead><tr><th>时间</th><th>色系</th><th>进入方式</th></tr></thead><tbody>' +
+              '<div class="visit-timeline"><table><thead><tr><th>时间</th><th>色系</th><th>进入方式</th><th>IP / 地区</th></tr></thead><tbody>' +
               rows +
               "</tbody></table></div>";
           }
@@ -632,6 +649,8 @@
             (guestLabel[r.guests] || escapeHtml(r.guests)) +
             '</td><td class="msg">' +
             escapeHtml(r.message || "") +
+            "</td><td>" +
+            formatIpSource(r.ip, r.ipLocation) +
             "</td><td>" +
             formatTime(r.created_at) +
             "</td>";

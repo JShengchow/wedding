@@ -4,6 +4,7 @@ import path from "node:path";
 import fs from "node:fs";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { describeIp } from "./ipGeo.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -102,7 +103,7 @@ const insertStmt = db.prepare(`
 `);
 
 const selectAllStmt = db.prepare(`
-  SELECT id, name, phone, attendance, guests, message, created_at
+  SELECT id, name, phone, attendance, guests, message, ip, created_at
   FROM wedding_rsvp
   ORDER BY id DESC
 `);
@@ -428,7 +429,14 @@ app.get("/api/admin/rsvp", (req, res) => {
     attendingCount: attending.length,
     absentCount: rows.length - attending.length,
     headcount,
-    rows,
+    rows: rows.map((row) => {
+      const ipInfo = describeIp(row.ip);
+      return {
+        ...row,
+        ip: ipInfo.ip,
+        ipLocation: ipInfo.location,
+      };
+    }),
   });
 });
 
@@ -487,7 +495,7 @@ app.get("/api/admin/analytics", (req, res) => {
 
   const visitRows = db
     .prepare(`
-      SELECT id, visitor_id, theme, audio_mode, created_at
+      SELECT id, visitor_id, theme, audio_mode, ip, created_at
       FROM wedding_visit
       ORDER BY id DESC
     `)
@@ -498,11 +506,14 @@ app.get("/api/admin/analytics", (req, res) => {
     if (!visitsByVisitor.has(visit.visitor_id)) {
       visitsByVisitor.set(visit.visitor_id, []);
     }
+    const ipInfo = describeIp(visit.ip);
     visitsByVisitor.get(visit.visitor_id).push({
       id: visit.id,
       theme: visit.theme,
       audioMode: visit.audio_mode,
       createdAt: visit.created_at,
+      ip: ipInfo.ip,
+      ipLocation: ipInfo.location,
     });
   }
 
@@ -523,6 +534,8 @@ app.get("/api/admin/analytics", (req, res) => {
       lastSeenAt: row.last_seen_at,
       lastTheme: latest?.theme || null,
       lastAudioMode: latest?.audioMode || null,
+      lastIp: latest?.ip || "",
+      lastIpLocation: latest?.ipLocation || "",
       visits,
     };
   });

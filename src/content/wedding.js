@@ -23,7 +23,7 @@ export const MAP_QUERY = encodeURIComponent(`${VENUE.name} ${VENUE.address}`);
 
 export const SCHEDULE = [
   { time: "15:10", title: "签到入场", desc: "签到留念 · 迎宾合影" },
-  { time: "15:20", title: "游园活动", desc: "自由活动 · 漫步花园", hideTime: true },
+  { time: "15:20", title: "游园活动", desc: "自由活动 · 手作寻趣 · 嬉游其间", hideTime: true },
   { time: "16:30", title: "婚礼仪式", desc: "证婚致意 · 交换戒指 · 互许诺言", hideTime: true },
   { time: "17:20", title: "自由合影", desc: "亲友留影 · 定格欢聚时光", hideTime: true },
   { time: "18:30", title: "晚宴开席", desc: "举杯共贺 · 共享盛宴", hideTime: true },
