@@ -3,9 +3,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ClipboardPen, Music2, Palette, Sparkles } from "lucide-react";
 import { useRsvpUI } from "../context/RsvpUIContext";
 import { BGM_SRC } from "../content/wedding";
+import { trackVisit } from "../lib/visitor";
 
 const AUTO_CLOSE_MS = 5000;
 const ONBOARDING_EXIT_MS = 620;
+const RSVP_HINT_MS = 6000;
 const EDGE_GAP = 12;
 
 function getInitialTop() {
@@ -36,6 +38,7 @@ export function ThemeWheel({ themes, activeTheme, onChange }) {
   const [dockTop, setDockTop] = useState(getInitialTop);
   const [dragging, setDragging] = useState(false);
   const [activityToken, setActivityToken] = useState(0);
+  const [rsvpHintVisible, setRsvpHintVisible] = useState(false);
 
   const markActivity = () => {
     setActivityToken((value) => value + 1);
@@ -113,6 +116,22 @@ export function ThemeWheel({ themes, activeTheme, onChange }) {
       window.clearTimeout(timer);
     };
   }, [open, activityToken]);
+
+  useEffect(() => {
+    if (!showRsvpPrompt || open) {
+      setRsvpHintVisible(false);
+      return undefined;
+    }
+
+    setRsvpHintVisible(true);
+    const timer = window.setTimeout(() => {
+      setRsvpHintVisible(false);
+    }, RSVP_HINT_MS);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [showRsvpPrompt, open]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -203,6 +222,11 @@ export function ThemeWheel({ themes, activeTheme, onChange }) {
   };
 
   const enterInvitation = (shouldPlayMusic) => {
+    trackVisit({
+      theme: activeTheme,
+      audioMode: shouldPlayMusic ? "music" : "muted",
+    });
+
     const audio = audioRef.current;
     markActivity();
 
@@ -326,9 +350,9 @@ export function ThemeWheel({ themes, activeTheme, onChange }) {
 
           <AnimatePresence>
             {showRsvpPrompt ? (
-              <motion.button
+              <motion.div
                 key="rsvp-prompt"
-                type="button"
+                className="floating-dock-rsvp-wrap"
                 initial={{ opacity: 0, x: 14, scale: 0.72 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: 10, scale: 0.8 }}
@@ -338,14 +362,33 @@ export function ThemeWheel({ themes, activeTheme, onChange }) {
                   damping: 24,
                   mass: 0.7,
                 }}
-                className="floating-dock-trigger floating-dock-trigger-rsvp"
-                aria-label="填写宾客回执"
-                title="填写回执"
-                onClick={openModal}
               >
-                <ClipboardPen className="h-4 w-4" />
-                <span className="floating-dock-trigger-rsvp-ring" aria-hidden="true" />
-              </motion.button>
+                <AnimatePresence>
+                  {rsvpHintVisible ? (
+                    <motion.div
+                      key="rsvp-hint"
+                      className="floating-dock-rsvp-hint"
+                      initial={{ opacity: 0, x: 6 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 4 }}
+                      transition={{ duration: 0.28, ease: "easeOut" }}
+                    >
+                      <span>记得点这里填写回执喔</span>
+                      <span className="floating-dock-rsvp-hint-arrow" aria-hidden="true" />
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
+                <button
+                  type="button"
+                  className="floating-dock-trigger floating-dock-trigger-rsvp"
+                  aria-label="填写宾客回执"
+                  title="填写回执"
+                  onClick={openModal}
+                >
+                  <ClipboardPen className="h-4 w-4" />
+                  <span className="floating-dock-trigger-rsvp-ring" aria-hidden="true" />
+                </button>
+              </motion.div>
             ) : null}
           </AnimatePresence>
         </div>

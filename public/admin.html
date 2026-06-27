@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
-    <title>回执管理 · RSVP</title>
+    <title>婚礼管理 · RSVP & 浏览</title>
     <style>
       :root {
         --champagne: #b8895a;
@@ -199,6 +199,59 @@
         color: var(--ink-soft);
         font-size: 12px;
       }
+      .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 28px 0 12px;
+        letter-spacing: 0.04em;
+      }
+      .breakdown {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: #fff;
+        font-size: 12px;
+        color: var(--ink-soft);
+      }
+      .chip strong {
+        color: var(--champagne-dark);
+        font-weight: 600;
+      }
+      .visitor-main {
+        cursor: pointer;
+      }
+      .visitor-main:hover td {
+        background: #faf7f1;
+      }
+      .visitor-toggle {
+        display: inline-block;
+        width: 14px;
+        color: var(--champagne-dark);
+        font-size: 11px;
+      }
+      .visit-timeline {
+        padding: 0 14px 12px 14px;
+        background: #faf7f1;
+      }
+      .visit-timeline table {
+        font-size: 12px;
+      }
+      .visit-timeline th,
+      .visit-timeline td {
+        padding: 8px 10px;
+      }
+      .section-gap {
+        height: 8px;
+      }
       @media (max-width: 560px) {
         .stats {
           grid-template-columns: repeat(2, 1fr);
@@ -230,9 +283,51 @@
       <!-- 数据视图 -->
       <section id="dataView" hidden>
         <header>
-          <h1>宾客回执</h1>
+          <h1>婚礼管理</h1>
           <p class="muted" id="updatedAt"></p>
         </header>
+
+        <h2 class="section-title">浏览统计</h2>
+        <div class="stats" id="analyticsStats">
+          <div class="stat">
+            <div class="num" id="vTotal">0</div>
+            <div class="lbl">总进入次数</div>
+          </div>
+          <div class="stat">
+            <div class="num" id="vUnique">0</div>
+            <div class="lbl">独立访客</div>
+          </div>
+          <div class="stat">
+            <div class="num" id="vIdentified">0</div>
+            <div class="lbl">已识别姓名</div>
+          </div>
+          <div class="stat">
+            <div class="num" id="vMusic">0</div>
+            <div class="lbl">音乐进入</div>
+          </div>
+        </div>
+
+        <div class="breakdown" id="themeBreakdown"></div>
+        <div class="breakdown" id="audioBreakdown"></div>
+
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>访客</th>
+                <th>次数</th>
+                <th>最近色系</th>
+                <th>最近进入</th>
+                <th>最后访问</th>
+              </tr>
+            </thead>
+            <tbody id="visitorBody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="visitorEmpty" hidden>暂无浏览记录</div>
+
+        <div class="section-gap"></div>
+        <h2 class="section-title">宾客回执</h2>
 
         <div class="stats">
           <div class="stat">
@@ -296,6 +391,19 @@
         "4+": "4 人及以上",
       };
 
+      const themeLabel = {
+        bloom: "烟粉",
+        ink: "墨韵",
+        noir: "黑金",
+        forest: "森系",
+        violet: "紫梦",
+      };
+
+      const audioLabel = {
+        music: "播放音乐",
+        muted: "静音进入",
+      };
+
       function getToken() {
         return localStorage.getItem(TOKEN_KEY) || "";
       }
@@ -337,25 +445,146 @@
 
         $("dataMsg").textContent = "加载中…";
         try {
-          const res = await fetch("/api/admin/rsvp", {
-            headers: { Authorization: "Bearer " + token },
-          });
+          const [rsvpRes, analyticsRes] = await Promise.all([
+            fetch("/api/admin/rsvp", {
+              headers: { Authorization: "Bearer " + token },
+            }),
+            fetch("/api/admin/analytics", {
+              headers: { Authorization: "Bearer " + token },
+            }),
+          ]);
 
-          if (res.status === 401) {
+          if (rsvpRes.status === 401 || analyticsRes.status === 401) {
             clearToken();
             return showLogin("口令不正确，请重试");
           }
-          if (res.status === 503) {
+          if (rsvpRes.status === 503 || analyticsRes.status === 503) {
             return showLogin("服务端未启用管理功能（缺少 admin-token）");
           }
-          if (!res.ok) throw new Error("HTTP " + res.status);
+          if (!rsvpRes.ok) throw new Error("RSVP HTTP " + rsvpRes.status);
+          if (!analyticsRes.ok) {
+            throw new Error("Analytics HTTP " + analyticsRes.status);
+          }
 
-          const data = await res.json();
-          renderData(data);
+          const rsvpData = await rsvpRes.json();
+          const analyticsData = await analyticsRes.json();
+          renderAnalytics(analyticsData);
+          renderData(rsvpData);
           showData();
           $("dataMsg").textContent = "";
         } catch (err) {
           $("dataMsg").textContent = "加载失败：" + err.message;
+        }
+      }
+
+      function formatTime(value) {
+        return escapeHtml(String(value || "").replace("T", " ").slice(0, 16));
+      }
+
+      function renderBreakdown(containerId, stats, labels, prefix) {
+        const container = $(containerId);
+        container.innerHTML = "";
+        const entries = Object.entries(stats || {}).sort((a, b) => b[1] - a[1]);
+        if (!entries.length) {
+          container.innerHTML =
+            '<span class="chip">' + prefix + "暂无数据</span>";
+          return;
+        }
+        for (const [key, count] of entries) {
+          const chip = document.createElement("span");
+          chip.className = "chip";
+          chip.innerHTML =
+            prefix +
+            (labels[key] || key) +
+            ' <strong>' +
+            count +
+            "</strong>";
+          container.appendChild(chip);
+        }
+      }
+
+      function renderAnalytics(data) {
+        const summary = data.summary || {};
+        $("vTotal").textContent = summary.totalVisits || 0;
+        $("vUnique").textContent = summary.uniqueVisitors || 0;
+        $("vIdentified").textContent = summary.identifiedVisitors || 0;
+        $("vMusic").textContent = summary.audioStats?.music || 0;
+
+        renderBreakdown(
+          "themeBreakdown",
+          summary.themeStats,
+          themeLabel,
+          "色系 · ",
+        );
+        renderBreakdown(
+          "audioBreakdown",
+          summary.audioStats,
+          audioLabel,
+          "进入 · ",
+        );
+
+        const tbody = $("visitorBody");
+        tbody.innerHTML = "";
+        const visitors = data.visitors || [];
+        $("visitorEmpty").hidden = visitors.length > 0;
+
+        for (const visitor of visitors) {
+          const mainRow = document.createElement("tr");
+          mainRow.className = "visitor-main";
+          mainRow.innerHTML =
+            '<td><span class="visitor-toggle">▸</span> ' +
+            escapeHtml(visitor.displayName) +
+            (visitor.rsvpPhone
+              ? '<div class="muted">' + escapeHtml(visitor.rsvpPhone) + "</div>"
+              : "") +
+            "</td><td>" +
+            visitor.visitCount +
+            "</td><td>" +
+            escapeHtml(themeLabel[visitor.lastTheme] || visitor.lastTheme || "—") +
+            "</td><td>" +
+            escapeHtml(audioLabel[visitor.lastAudioMode] || visitor.lastAudioMode || "—") +
+            "</td><td>" +
+            formatTime(visitor.lastSeenAt) +
+            "</td>";
+
+          const timelineRow = document.createElement("tr");
+          timelineRow.hidden = true;
+          const timelineCell = document.createElement("td");
+          timelineCell.colSpan = 5;
+
+          const visits = visitor.visits || [];
+          if (!visits.length) {
+            timelineCell.innerHTML =
+              '<div class="visit-timeline muted">暂无进入记录</div>';
+          } else {
+            let rows = "";
+            for (const visit of visits) {
+              rows +=
+                "<tr><td>" +
+                formatTime(visit.createdAt) +
+                "</td><td>" +
+                escapeHtml(themeLabel[visit.theme] || visit.theme) +
+                "</td><td>" +
+                escapeHtml(audioLabel[visit.audioMode] || visit.audioMode) +
+                "</td></tr>";
+            }
+            timelineCell.innerHTML =
+              '<div class="visit-timeline"><table><thead><tr><th>时间</th><th>色系</th><th>进入方式</th></tr></thead><tbody>' +
+              rows +
+              "</tbody></table></div>";
+          }
+
+          timelineRow.appendChild(timelineCell);
+          mainRow.addEventListener("click", () => {
+            const opening = timelineRow.hidden;
+            timelineRow.hidden = !opening;
+            mainRow.querySelector(".visitor-toggle").textContent = opening
+              ? "▾"
+              : "▸";
+          });
+
+          tbody.appendChild(mainRow);
+          tbody.appendChild(timelineRow);
         }
       }
 

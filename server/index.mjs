@@ -67,6 +67,35 @@ function migrateGuestConstraintIfNeeded() {
 
 migrateGuestConstraintIfNeeded();
 
+function migrateAnalyticsTables() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS wedding_visitor (
+      id            TEXT PRIMARY KEY,
+      rsvp_name     TEXT,
+      rsvp_phone    TEXT,
+      first_seen_at TEXT NOT NULL,
+      last_seen_at  TEXT NOT NULL,
+      visit_count   INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS wedding_visit (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      visitor_id  TEXT NOT NULL,
+      theme       TEXT NOT NULL,
+      audio_mode  TEXT NOT NULL,
+      ip          TEXT,
+      ua          TEXT,
+      created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (visitor_id) REFERENCES wedding_visitor(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_wedding_visit_visitor ON wedding_visit(visitor_id);
+    CREATE INDEX IF NOT EXISTS idx_wedding_visit_created ON wedding_visit(created_at);
+  `);
+}
+
+migrateAnalyticsTables();
+
 const insertStmt = db.prepare(`
   INSERT INTO wedding_rsvp (name, phone, attendance, guests, message, ip, ua)
   VALUES (@name, @phone, @attendance, @guests, @message, @ip, @ua)
@@ -142,9 +171,16 @@ function toCsv(rows) {
 
 const ATTENDANCE_VALUES = new Set(["attend", "absent"]);
 const GUESTS_VALUES = new Set(["0", "1", "2", "3", "4", "5+"]);
+const THEME_VALUES = new Set(["bloom", "ink", "noir", "forest", "violet"]);
+const AUDIO_MODE_VALUES = new Set(["music", "muted"]);
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const SUBMIT_THROTTLE_MS = 5 * 1000;
+const VISIT_DEDUPE_MS = 3 * 1000;
 const lastIpSubmitAt = new Map();
+const lastIpVisitAt = new Map();
+const lastVisitorVisitAt = new Map();
 
 // Periodically prune the in-memory throttle map so it does not grow unbounded
 // for a long-running process. Entries older than 10 minutes are no longer
@@ -157,7 +193,89 @@ setInterval(() => {
       lastIpSubmitAt.delete(ip);
     }
   }
+  for (const [ip, ts] of lastIpVisitAt) {
+    if (ts < cutoff) {
+      lastIpVisitAt.delete(ip);
+    }
+  }
+  for (const [visitorId, ts] of lastVisitorVisitAt) {
+    if (ts < cutoff) {
+      lastVisitorVisitAt.delete(visitorId);
+    }
+  }
 }, THROTTLE_PRUNE_MS).unref();
+
+function isUuid(value) {
+  return typeof value === "string" && UUID_RE.test(value);
+}
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function linkVisitorToRsvp(visitorId, name, phone) {
+  if (!isUuid(visitorId)) return;
+
+  const existing = db
+    .prepare("SELECT id FROM wedding_visitor WHERE id = ?")
+    .get(visitorId);
+  const ts = nowIso();
+
+  if (existing) {
+    db.prepare(`
+      UPDATE wedding_visitor
+      SET rsvp_name = @name, rsvp_phone = @phone, last_seen_at = @ts
+      WHERE id = @visitorId
+    `).run({ visitorId, name, phone, ts });
+    return;
+  }
+
+  db.prepare(`
+    INSERT INTO wedding_visitor (
+      id, rsvp_name, rsvp_phone, first_seen_at, last_seen_at, visit_count
+    )
+    VALUES (@visitorId, @name, @phone, @ts, @ts, 0)
+  `).run({ visitorId, name, phone, ts });
+}
+
+const recordVisitTx = db.transaction(
+  ({ visitorId, theme, audioMode, ip, ua }) => {
+    const ts = nowIso();
+    const existing = db
+      .prepare("SELECT id FROM wedding_visitor WHERE id = ?")
+      .get(visitorId);
+
+    if (existing) {
+      db.prepare(`
+        UPDATE wedding_visitor
+        SET last_seen_at = @ts, visit_count = visit_count + 1
+        WHERE id = @visitorId
+      `).run({ visitorId, ts });
+    } else {
+      db.prepare(`
+        INSERT INTO wedding_visitor (
+          id, rsvp_name, rsvp_phone, first_seen_at, last_seen_at, visit_count
+        )
+        VALUES (@visitorId, NULL, NULL, @ts, @ts, 1)
+      `).run({ visitorId, ts });
+    }
+
+    db.prepare(`
+      INSERT INTO wedding_visit (visitor_id, theme, audio_mode, ip, ua)
+      VALUES (@visitorId, @theme, @audioMode, @ip, @ua)
+    `).run({
+      visitorId,
+      theme,
+      audioMode,
+      ip,
+      ua,
+    });
+
+    return db
+      .prepare("SELECT visit_count FROM wedding_visitor WHERE id = ?")
+      .get(visitorId)?.visit_count;
+  },
+);
 
 function isString(value, min, max) {
   return (
@@ -233,9 +351,62 @@ app.post("/api/rsvp", (req, res) => {
       ua: String(req.headers["user-agent"] || "").slice(0, 200),
     });
     lastIpSubmitAt.set(ip, now);
+
+    const visitorId =
+      typeof req.body?.visitorId === "string" ? req.body.visitorId.trim() : "";
+    if (visitorId) {
+      linkVisitorToRsvp(visitorId, result.value.name, result.value.phone);
+    }
+
     res.json({ ok: true });
   } catch (err) {
     console.error("[rsvp] insert failed", err);
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+app.post("/api/visit", (req, res) => {
+  const ip = req.ip || req.socket?.remoteAddress || "";
+
+  if (req.body && typeof req.body.hp === "string" && req.body.hp.length > 0) {
+    return res.json({ ok: true, deduped: true });
+  }
+
+  const visitorId =
+    typeof req.body?.visitorId === "string" ? req.body.visitorId.trim() : "";
+  const theme = req.body?.theme;
+  const audioMode = req.body?.audioMode;
+
+  if (!isUuid(visitorId)) {
+    return res.status(400).json({ error: "bad_visitor_id" });
+  }
+  if (!THEME_VALUES.has(theme)) {
+    return res.status(400).json({ error: "bad_theme" });
+  }
+  if (!AUDIO_MODE_VALUES.has(audioMode)) {
+    return res.status(400).json({ error: "bad_audio_mode" });
+  }
+
+  const now = Date.now();
+  const lastIp = lastIpVisitAt.get(ip) || 0;
+  const lastVisitor = lastVisitorVisitAt.get(visitorId) || 0;
+  if (now - lastIp < VISIT_DEDUPE_MS || now - lastVisitor < VISIT_DEDUPE_MS) {
+    return res.json({ ok: true, deduped: true });
+  }
+
+  try {
+    const visitCount = recordVisitTx({
+      visitorId,
+      theme,
+      audioMode,
+      ip,
+      ua: String(req.headers["user-agent"] || "").slice(0, 200),
+    });
+    lastIpVisitAt.set(ip, now);
+    lastVisitorVisitAt.set(visitorId, now);
+    res.json({ ok: true, visitCount });
+  } catch (err) {
+    console.error("[visit] insert failed", err);
     res.status(500).json({ error: "server_error" });
   }
 });
@@ -271,6 +442,100 @@ app.get("/api/admin/rsvp.csv", (req, res) => {
     `attachment; filename="wedding-rsvp-${date}.csv"`,
   );
   res.send(toCsv(rows));
+});
+
+app.get("/api/admin/analytics", (req, res) => {
+  if (!isAdminAuthorized(req, res)) return;
+
+  const totalVisits = db
+    .prepare("SELECT COUNT(*) AS count FROM wedding_visit")
+    .get().count;
+  const uniqueVisitors = db
+    .prepare("SELECT COUNT(*) AS count FROM wedding_visitor")
+    .get().count;
+  const identifiedVisitors = db
+    .prepare(
+      "SELECT COUNT(*) AS count FROM wedding_visitor WHERE rsvp_name IS NOT NULL AND trim(rsvp_name) != ''",
+    )
+    .get().count;
+
+  const themeStats = Object.fromEntries(
+    db
+      .prepare(
+        "SELECT theme, COUNT(*) AS count FROM wedding_visit GROUP BY theme",
+      )
+      .all()
+      .map((row) => [row.theme, row.count]),
+  );
+  const audioStats = Object.fromEntries(
+    db
+      .prepare(
+        "SELECT audio_mode, COUNT(*) AS count FROM wedding_visit GROUP BY audio_mode",
+      )
+      .all()
+      .map((row) => [row.audio_mode, row.count]),
+  );
+
+  const visitorRows = db
+    .prepare(`
+      SELECT id, rsvp_name, rsvp_phone, visit_count, first_seen_at, last_seen_at
+      FROM wedding_visitor
+      ORDER BY visit_count DESC, last_seen_at DESC, id ASC
+    `)
+    .all();
+
+  const visitRows = db
+    .prepare(`
+      SELECT id, visitor_id, theme, audio_mode, created_at
+      FROM wedding_visit
+      ORDER BY id DESC
+    `)
+    .all();
+
+  const visitsByVisitor = new Map();
+  for (const visit of visitRows) {
+    if (!visitsByVisitor.has(visit.visitor_id)) {
+      visitsByVisitor.set(visit.visitor_id, []);
+    }
+    visitsByVisitor.get(visit.visitor_id).push({
+      id: visit.id,
+      theme: visit.theme,
+      audioMode: visit.audio_mode,
+      createdAt: visit.created_at,
+    });
+  }
+
+  const visitors = visitorRows.map((row) => {
+    const visits = visitsByVisitor.get(row.id) || [];
+    const latest = visits[0] || null;
+    const displayName = row.rsvp_name?.trim()
+      ? row.rsvp_name.trim()
+      : `访客 ${row.id.slice(0, 4)}`;
+
+    return {
+      id: row.id,
+      displayName,
+      rsvpName: row.rsvp_name,
+      rsvpPhone: row.rsvp_phone,
+      visitCount: row.visit_count,
+      firstSeenAt: row.first_seen_at,
+      lastSeenAt: row.last_seen_at,
+      lastTheme: latest?.theme || null,
+      lastAudioMode: latest?.audioMode || null,
+      visits,
+    };
+  });
+
+  res.json({
+    summary: {
+      totalVisits,
+      uniqueVisitors,
+      identifiedVisitors,
+      themeStats,
+      audioStats,
+    },
+    visitors,
+  });
 });
 
 app.use((_req, res) => {

@@ -1,3 +1,5 @@
+import { getVisitorId } from "./visitor";
+
 const RSVP_ENDPOINT =
   import.meta.env.VITE_RSVP_ENDPOINT || "/api/rsvp";
 
@@ -51,6 +53,7 @@ export async function submitRsvp(form) {
     guests: form.guests,
     message: form.message || null,
     hp: form.hp || "",
+    visitorId: getVisitorId() || undefined,
   };
 
   let response;
