@@ -1,5 +1,6 @@
 import { AlertCircle, Heart, LoaderCircle } from "lucide-react";
 import { Field } from "./Field";
+import { Select } from "./Select";
 
 const ATTENDANCE_OPTIONS = [
   { value: "attend", label: "出席" },
@@ -15,7 +16,7 @@ const GUEST_OPTIONS = [
 ];
 
 const INPUT_CLASS =
-  "w-full rounded-2xl border border-champagne-200 bg-white px-5 py-4 text-base outline-none transition focus:border-champagne-400 focus:ring-2 focus:ring-champagne-200";
+  "w-full rounded-2xl border border-champagne-200 bg-ivory-50 px-5 py-4 text-base text-ink outline-none transition focus:border-champagne-400 focus:ring-2 focus:ring-champagne-200";
 
 export function RsvpFormBody({
   form,
@@ -90,7 +91,7 @@ export function RsvpFormBody({
                 className={`flex cursor-pointer items-center justify-center gap-2 rounded-2xl border px-4 py-4 text-base transition ${
                   active
                     ? "border-champagne-400 bg-gradient-to-br from-champagne-50 to-blush-50 text-champagne-700 shadow-sm"
-                    : "border-champagne-200 bg-white text-ink-soft"
+                    : "border-champagne-200 bg-ivory-50 text-ink-soft"
                 }`}
               >
                 <input
@@ -111,18 +112,12 @@ export function RsvpFormBody({
 
       {isAbsent ? null : (
         <Field label="出席人数">
-          <select
+          <Select
             id={`${idPrefix}-guests`}
             value={form.guests}
             onChange={updateField("guests")}
-            className={INPUT_CLASS}
-          >
-            {GUEST_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+            options={GUEST_OPTIONS}
+          />
         </Field>
       )}
 

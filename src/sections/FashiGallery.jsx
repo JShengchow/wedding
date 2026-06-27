@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { motionItem, scatterItem } from "../components/MotionSection";
-import { fashiPhotos } from "../lib/photos";
+import { fashiPhotos, fenweiPhotos } from "../lib/photos";
 
 const LANDSCAPE_STILLS = [
   {
@@ -32,6 +32,14 @@ const LANDSCAPE_STILLS = [
     rotate: "rotate-[0.3deg]",
   },
 ];
+
+const FENWEI_01_STILL = {
+  photoIndex: 0,
+  tag: "夕光相向",
+  caption: "把黄昏留在此刻",
+  side: "right",
+  objectPosition: "object-[center_38%]",
+};
 
 const PORTRAIT_LOOKBOOK = [
   {
@@ -105,6 +113,52 @@ function LookbookFrame({ photo, still }) {
   );
 }
 
+function OpeningLookbookPair() {
+  return (
+    <motion.div variants={portraitItem} className="grid grid-cols-[1.15fr_0.85fr] items-end gap-3">
+      <figure className="group">
+        <div className="overflow-hidden rounded-[18px] border border-white/70 bg-champagne-100 shadow-soft transition duration-500 group-hover:shadow-warm">
+          <div className="aspect-[4/3] w-full overflow-hidden">
+            <img
+              src={fenweiPhotos[1].src}
+              alt={fenweiPhotos[1].alt}
+              loading="lazy"
+              decoding="async"
+              className="block h-full w-full scale-[1.02] object-cover object-[center_42%]"
+            />
+          </div>
+        </div>
+        <figcaption className="mt-3 max-w-[11rem] border-l-2 border-champagne-400 pl-3">
+          <p className="text-display text-base font-light text-ink">花野余香</p>
+          <p className="mt-1 text-xs leading-6 text-ink-soft">风经过时也变慢</p>
+        </figcaption>
+      </figure>
+
+      <figure className="group">
+        <div className="overflow-hidden rounded-[18px] border border-white/70 bg-champagne-100 shadow-soft transition duration-500 group-hover:shadow-warm">
+          <div className="aspect-[2/3] w-full overflow-hidden">
+            <img
+              src={fenweiPhotos[FENWEI_01_STILL.photoIndex].src}
+              alt={fenweiPhotos[FENWEI_01_STILL.photoIndex].alt}
+              loading="lazy"
+              decoding="async"
+              className={`block h-full w-full scale-[1.02] object-cover ${FENWEI_01_STILL.objectPosition}`}
+            />
+          </div>
+        </div>
+        <figcaption className="mt-3 ml-auto max-w-[9.5rem] border-r-2 border-champagne-400 pr-3 text-right">
+          <p className="text-display text-base font-light text-ink">
+            {FENWEI_01_STILL.tag}
+          </p>
+          <p className="mt-1 text-xs leading-6 text-ink-soft">
+            {FENWEI_01_STILL.caption}
+          </p>
+        </figcaption>
+      </figure>
+    </motion.div>
+  );
+}
+
 function PortraitLookbook() {
   const leftItems = PORTRAIT_LOOKBOOK.filter((item) => item.side === "left");
   const rightItems = PORTRAIT_LOOKBOOK.filter((item) => item.side === "right");
@@ -112,7 +166,17 @@ function PortraitLookbook() {
   return (
     <>
       <div className="space-y-14 md:hidden">
-        {PORTRAIT_LOOKBOOK.map((still) => (
+        <OpeningLookbookPair />
+        <LookbookFrame
+          key={PORTRAIT_LOOKBOOK[1].tag}
+          photo={fashiPhotos[PORTRAIT_LOOKBOOK[1].photoIndex]}
+          still={PORTRAIT_LOOKBOOK[1]}
+        />
+        <LookbookFrame
+          photo={fashiPhotos[PORTRAIT_LOOKBOOK[0].photoIndex]}
+          still={PORTRAIT_LOOKBOOK[0]}
+        />
+        {PORTRAIT_LOOKBOOK.slice(2).map((still) => (
           <LookbookFrame
             key={still.tag}
             photo={fashiPhotos[still.photoIndex]}

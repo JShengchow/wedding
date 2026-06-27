@@ -7,7 +7,7 @@ import {
 import { MemoryMap } from "../components/MemoryMap";
 import { MotionSection, motionItem, scatterItem } from "../components/MotionSection";
 import { FashiGallery } from "./FashiGallery";
-import { carouselPhotos, photoWallPhotos, polaroidPhotos } from "../lib/photos";
+import { carouselPhotos, photoWallPhotos, polaroidPhotos, senxiPhotos } from "../lib/photos";
 
 const MEMORY_STILLS = [
   {
@@ -83,6 +83,7 @@ const MOSAIC_PHOTOS = [
     desc: "把一片蓝色海光，留给未来回望。",
     photoIndex: 5,
     orientation: "landscape",
+    useOriginalAspect: true,
   },
 ];
 
@@ -90,6 +91,21 @@ const FEATURED_MOSAIC_PHOTO = MOSAIC_PHOTOS[0];
 const FIRST_PORTRAIT_ROW = MOSAIC_PHOTOS.slice(1, 3);
 const SECOND_LANDSCAPE_MOSAIC_PHOTO = MOSAIC_PHOTOS[5];
 const FINAL_PORTRAIT_ROW = MOSAIC_PHOTOS.slice(3, 5);
+
+const SENXI_WALL_STILLS = [
+  {
+    photoIndex: 1,
+    tag: "senxi-02",
+    rotate: "-rotate-[0.4deg]",
+    objectPosition: "object-[center_42%]",
+  },
+  {
+    photoIndex: 0,
+    tag: "senxi-01",
+    rotate: "rotate-[0.5deg]",
+    objectPosition: "object-center",
+  },
+];
 
 const POLAROID_STACK = [
   {
@@ -331,7 +347,11 @@ export function Gallery() {
             </div>
 
             <div
-              className="relative col-span-2 aspect-[16/9] w-full rotate-[0.5deg] overflow-hidden rounded-[20px] border border-white/60 bg-champagne-100 shadow-sm md:rounded-[26px]"
+              className={`relative col-span-2 w-full rotate-[0.5deg] overflow-hidden rounded-[20px] border border-white/60 bg-champagne-100 shadow-sm md:rounded-[26px] ${
+                SECOND_LANDSCAPE_MOSAIC_PHOTO.useOriginalAspect
+                  ? ""
+                  : "aspect-[16/9]"
+              }`}
             >
               <img
                 src={
@@ -342,7 +362,11 @@ export function Gallery() {
                 }
                 loading="lazy"
                 decoding="async"
-                className="h-full w-full object-cover object-center"
+                className={
+                  SECOND_LANDSCAPE_MOSAIC_PHOTO.useOriginalAspect
+                    ? "block h-auto w-full"
+                    : "h-full w-full object-cover object-center"
+                }
               />
             </div>
 
@@ -370,6 +394,39 @@ export function Gallery() {
                 );
               })}
             </div>
+
+            <div className="col-span-2 flex items-center gap-3 pb-1 pt-4 md:gap-4 md:pb-2 md:pt-8">
+              <span
+                aria-hidden="true"
+                className="h-px flex-1 bg-gradient-to-r from-transparent via-champagne-300/80 to-champagne-200/30"
+              />
+              <p className="text-center text-[11px] leading-5 tracking-[0.18em] text-champagne-700 md:text-xs">
+                林深时见 · 心也安静
+              </p>
+              <span
+                aria-hidden="true"
+                className="h-px flex-1 bg-gradient-to-l from-transparent via-champagne-300/80 to-champagne-200/30"
+              />
+            </div>
+
+            {SENXI_WALL_STILLS.map((still) => {
+              const photo = senxiPhotos[still.photoIndex];
+
+              return (
+                <div
+                  key={still.tag}
+                  className={`relative col-span-2 aspect-[3/2] w-full overflow-hidden rounded-[20px] border border-white/60 bg-champagne-100 shadow-sm md:rounded-[26px] ${still.rotate}`}
+                >
+                  <img
+                    src={photo.src}
+                    alt={photo.alt}
+                    loading="lazy"
+                    decoding="async"
+                    className={`h-full w-full object-cover ${still.objectPosition}`}
+                  />
+                </div>
+              );
+            })}
           </div>
         </motion.article>
 

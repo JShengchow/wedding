@@ -22,7 +22,7 @@ import gallery21 from "../assets/photos/gallery-21.webp";
 import gallery22 from "../assets/photos/gallery-22.webp";
 import gallery23 from "../assets/photos/gallery-23.webp";
 import gallery24 from "../assets/photos/gallery-24.webp";
-import childhoodBride from "../assets/photos/childhood-bride.jpg";
+import childhoodBride from "../assets/photos/childhood-bride.png";
 import childhoodGroom from "../assets/photos/childhood-groom.png";
 import hero01Cover from "../assets/photos/hero-01-cover.png";
 import kapian01 from "../assets/photos/kapian-01.webp";
@@ -37,8 +37,10 @@ import photowall012 from "../assets/photos/photowall-012.webp";
 import photowall013 from "../assets/photos/photowall-013.webp";
 import photowall014 from "../assets/photos/photowall-014.webp";
 import photowall015 from "../assets/photos/photowall-015.webp";
-import photowall016 from "../assets/photos/photowall-016.webp";
+import photowall016 from "../assets/photos/photowall-016.jpg";
 import photowall017 from "../assets/photos/photowall-017.webp";
+import senxi01 from "../assets/photos/senxi-01.webp";
+import senxi02 from "../assets/photos/senxi-02.webp";
 import story01Open from "../assets/photos/story-01-open.webp";
 import story02Open from "../assets/photos/story-02-open.webp";
 import fashi01 from "../assets/photos/fashi-01.webp";
@@ -49,6 +51,8 @@ import fashi05 from "../assets/photos/fashi-05.webp";
 import fashi06 from "../assets/photos/fashi-06.webp";
 import fashi07 from "../assets/photos/fashi-07.webp";
 import fashi08 from "../assets/photos/fashi-08.webp";
+import fenwei01 from "../assets/photos/fenwei-01.webp";
+import fenwei02 from "../assets/photos/fenwei-02.webp";
 import sunset01 from "../assets/photos/sunset-01.webp";
 import sunset02 from "../assets/photos/sunset-02.webp";
 import sunset03 from "../assets/photos/sunset-03.webp";
@@ -141,6 +145,11 @@ export const fashiPhotos = fashiAssets.map((src, index) => ({
   alt: `法式复古婚纱照 ${index + 1}`,
 }));
 
+export const fenweiPhotos = [fenwei01, fenwei02].map((src, index) => ({
+  src,
+  alt: `法式复古氛围 ${index + 1}`,
+}));
+
 export const sunsetPhotos = sunsetAssets.map((src, index) => ({
   src,
   alt: `日落婚纱照 ${index + 1}`,
@@ -149,6 +158,11 @@ export const sunsetPhotos = sunsetAssets.map((src, index) => ({
 export const photoWallPhotos = photoWallAssets.map((photo) => ({
   src: photo.src,
   alt: `照片墙 ${photo.name}`,
+}));
+
+export const senxiPhotos = [senxi01, senxi02].map((src, index) => ({
+  src,
+  alt: `森系婚纱照 ${index + 1}`,
 }));
 
 export const polaroidPhotos = polaroidAssets.map((photo) => ({
