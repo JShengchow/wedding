@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { submitRsvp } from "../lib/supabase";
+import { clampRsvpField, RSVP_LIMITS } from "../lib/rsvpLimits";
 
 export const INITIAL_RSVP_FORM = {
   name: "",
@@ -19,16 +20,16 @@ export function getSubmitErrorMessage(error) {
     case "too_many_requests":
       return "提交过于频繁，请稍候再试。";
     case "bad_name":
-      return "请填写姓名（1 - 40 个字符）。";
+      return `请填写姓名（${RSVP_LIMITS.name.min}–${RSVP_LIMITS.name.max} 个字符）。`;
     case "bad_phone":
-      return "请填写有效的联系电话（6 - 20 位）。";
+      return `请填写有效的联系电话（${RSVP_LIMITS.phone.min}–${RSVP_LIMITS.phone.max} 位）。`;
     case "bad_attendance":
       return "请选择出席状态。";
     case "bad_guests":
     case "bad_guests_for_absent":
       return "请选择出席人数。";
     case "bad_message":
-      return "留言长度请控制在 500 字以内。";
+      return `留言长度请控制在 ${RSVP_LIMITS.message.max} 字以内。`;
     case "bad_body":
       return "提交内容格式异常，请刷新后重试。";
     case "network_error":
@@ -49,7 +50,7 @@ export function useRsvpForm({ onSubmitted } = {}) {
 
   const updateField = (key) => (event) => {
     const { value } = event.target;
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => ({ ...prev, [key]: clampRsvpField(key, value) }));
   };
 
   const setAttendance = (value) => {
@@ -77,8 +78,30 @@ export function useRsvpForm({ onSubmitted } = {}) {
       return;
     }
 
-    if (!form.name.trim() || !form.phone.trim()) {
+    const name = form.name.trim();
+    const phone = form.phone.trim();
+
+    if (!name || !phone) {
       setSubmitError("请填写姓名与联系电话");
+      return;
+    }
+
+    if (name.length < RSVP_LIMITS.name.min || name.length > RSVP_LIMITS.name.max) {
+      setSubmitError(
+        `姓名请控制在 ${RSVP_LIMITS.name.min}–${RSVP_LIMITS.name.max} 个字符以内`,
+      );
+      return;
+    }
+
+    if (phone.length < RSVP_LIMITS.phone.min || phone.length > RSVP_LIMITS.phone.max) {
+      setSubmitError(
+        `联系电话请控制在 ${RSVP_LIMITS.phone.min}–${RSVP_LIMITS.phone.max} 位以内`,
+      );
+      return;
+    }
+
+    if (form.message.length > RSVP_LIMITS.message.max) {
+      setSubmitError(`留言请控制在 ${RSVP_LIMITS.message.max} 字以内`);
       return;
     }
 
@@ -87,8 +110,8 @@ export function useRsvpForm({ onSubmitted } = {}) {
     try {
       setLoading(true);
       await submitRsvp({
-        name: form.name.trim(),
-        phone: form.phone.trim(),
+        name,
+        phone,
         attendance: form.attendance,
         guests: isAbsent ? "0" : form.guests,
         message: form.message,

@@ -1,5 +1,6 @@
 import { AlertCircle, Heart, LoaderCircle } from "lucide-react";
 import { RSVP_SUCCESS_REMINDER } from "../content/wedding";
+import { RSVP_LIMITS } from "../lib/rsvpLimits";
 import { Field } from "./Field";
 import { Select } from "./Select";
 
@@ -62,7 +63,7 @@ export function RsvpFormBody({
           onChange={updateField("name")}
           placeholder="请输入您的称呼"
           autoComplete="name"
-          maxLength={40}
+          maxLength={RSVP_LIMITS.name.max}
           className={INPUT_CLASS}
         />
       </Field>
@@ -76,7 +77,7 @@ export function RsvpFormBody({
           placeholder="便于新人联系"
           autoComplete="tel"
           inputMode="tel"
-          maxLength={20}
+          maxLength={RSVP_LIMITS.phone.max}
           className={INPUT_CLASS}
         />
       </Field>
@@ -129,7 +130,7 @@ export function RsvpFormBody({
           onChange={updateField("message")}
           rows={3}
           placeholder="写下您想说的话～"
-          maxLength={500}
+          maxLength={RSVP_LIMITS.message.max}
           className={`${INPUT_CLASS} resize-none`}
         />
       </Field>
