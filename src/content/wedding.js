@@ -11,10 +11,13 @@ export const WEDDING_DATE_FULL = "2026 年 7 月 18 日";
 export const WEDDING_DATE_FOOTER = "盛夏 · 七月十八 · 期待与您相见";
 
 export const VENUE = {
-  name: "深礼堂 · 后海店",
-  address: "深圳市南山区南海大道 1090 号招商花园城 L5 层",
-  shortAddress: "南海大道1090号 招商花园城L5",
+  name: "深礼堂艺术中心(后海店)",
+  address: "南山区南海大道1090号招商花园城L5层",
+  shortAddress: "深礼堂艺术中心(后海店)",
 };
+
+export const VENUE_COPY_TEXT = `${VENUE.name} ${VENUE.address}`;
+export const VENUE_COPY_HINT = "已复制地址，期待与你相见！";
 
 export const MAP_QUERY = encodeURIComponent(`${VENUE.name} ${VENUE.address}`);
 
