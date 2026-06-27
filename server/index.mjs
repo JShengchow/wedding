@@ -108,6 +108,23 @@ const selectAllStmt = db.prepare(`
   ORDER BY id DESC
 `);
 
+const selectRsvpByIdsStmt = db.prepare(`
+  SELECT id, name, phone
+  FROM wedding_rsvp
+  WHERE id = ?
+`);
+
+const deleteRsvpByIdStmt = db.prepare(`
+  DELETE FROM wedding_rsvp
+  WHERE id = ?
+`);
+
+const clearVisitorRsvpLinkStmt = db.prepare(`
+  UPDATE wedding_visitor
+  SET rsvp_name = NULL, rsvp_phone = NULL
+  WHERE rsvp_phone = @phone AND rsvp_name = @name
+`);
+
 // Admin token is read from the ADMIN_TOKEN env var, or from a file at
 // data/admin-token (which lives outside the repo and is never overwritten by
 // deploys). When no token is configured the admin endpoints stay disabled.
@@ -124,6 +141,9 @@ function loadAdminToken() {
 }
 
 const ADMIN_TOKEN = loadAdminToken();
+
+const PURGE_CONFIRM_TEXT =
+  "I confirm that I want to completely clear everything";
 
 function isAdminAuthorized(req, res) {
   if (!ADMIN_TOKEN) {
@@ -145,6 +165,37 @@ function isAdminAuthorized(req, res) {
   }
 
   return true;
+}
+
+function verifyAdminTokenValue(token) {
+  if (!ADMIN_TOKEN) return false;
+  const provided = String(token || "");
+  const a = Buffer.from(provided);
+  const b = Buffer.from(ADMIN_TOKEN);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+function parseRsvpIds(raw) {
+  if (!Array.isArray(raw) || raw.length === 0) {
+    return null;
+  }
+
+  const ids = [];
+  const seen = new Set();
+  for (const value of raw) {
+    const id = Number(value);
+    if (!Number.isInteger(id) || id <= 0 || seen.has(id)) {
+      continue;
+    }
+    seen.add(id);
+    ids.push(id);
+  }
+
+  if (!ids.length || ids.length > 200) {
+    return null;
+  }
+
+  return ids;
 }
 
 function toCsv(rows) {
@@ -550,6 +601,68 @@ app.get("/api/admin/analytics", (req, res) => {
     },
     visitors,
   });
+});
+
+app.post("/api/admin/rsvp/delete", (req, res) => {
+  if (!isAdminAuthorized(req, res)) return;
+
+  const ids = parseRsvpIds(req.body?.ids);
+  if (!ids) {
+    return res.status(400).json({ error: "bad_ids" });
+  }
+
+  try {
+    const deleted = [];
+    const deleteTx = db.transaction((targetIds) => {
+      for (const id of targetIds) {
+        const row = selectRsvpByIdsStmt.get(id);
+        if (!row) continue;
+        deleteRsvpByIdStmt.run(id);
+        clearVisitorRsvpLinkStmt.run({
+          name: row.name,
+          phone: row.phone,
+        });
+        deleted.push(row);
+      }
+    });
+    deleteTx(ids);
+
+    if (!deleted.length) {
+      return res.status(404).json({ error: "not_found" });
+    }
+
+    res.json({ ok: true, deletedCount: deleted.length, deleted });
+  } catch (err) {
+    console.error("[admin] delete rsvp failed", err);
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+app.post("/api/admin/purge", (req, res) => {
+  if (!isAdminAuthorized(req, res)) return;
+
+  const confirmText =
+    typeof req.body?.confirmText === "string" ? req.body.confirmText.trim() : "";
+  if (confirmText !== PURGE_CONFIRM_TEXT) {
+    return res.status(400).json({ error: "bad_confirm_text" });
+  }
+
+  if (!verifyAdminTokenValue(req.body?.token)) {
+    return res.status(401).json({ error: "bad_token" });
+  }
+
+  try {
+    const purgeTx = db.transaction(() => {
+      db.prepare("DELETE FROM wedding_visit").run();
+      db.prepare("DELETE FROM wedding_visitor").run();
+      db.prepare("DELETE FROM wedding_rsvp").run();
+    });
+    purgeTx();
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[admin] purge failed", err);
+    res.status(500).json({ error: "server_error" });
+  }
 });
 
 app.use((_req, res) => {

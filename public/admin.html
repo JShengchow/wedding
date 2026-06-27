@@ -111,6 +111,157 @@
       .btn-ghost:hover {
         border-color: var(--champagne);
       }
+      .btn-danger {
+        background: var(--blush);
+        color: #fff;
+        border: 1px solid transparent;
+      }
+      .btn-danger:hover {
+        background: #b8746f;
+      }
+      .btn-danger:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .btn-danger-outline {
+        background: #fff;
+        color: var(--blush);
+        border: 1px solid #e8c4c1;
+      }
+      .btn-danger-outline:hover {
+        border-color: var(--blush);
+        background: #fdf5f4;
+      }
+      .danger-zone {
+        margin-top: 56px;
+        padding-top: 24px;
+        border-top: 1px dashed var(--line);
+      }
+      .danger-zone-title {
+        margin: 0 0 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink-soft);
+        letter-spacing: 0.04em;
+      }
+      .danger-zone-desc {
+        margin: 0 0 12px;
+      }
+      .btn-danger-subtle {
+        background: transparent;
+        color: var(--ink-soft);
+        border: 1px solid var(--line);
+        font-size: 12px;
+        padding: 8px 14px;
+      }
+      .btn-danger-subtle:hover {
+        color: var(--blush);
+        border-color: #e8c4c1;
+        background: #fdf5f4;
+      }
+      .row-selected td {
+        background: #fdf8f3;
+      }
+      .check-cell {
+        width: 42px;
+        text-align: center;
+      }
+      .check-cell input {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+      }
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(58, 52, 46, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        z-index: 100;
+      }
+      .modal-backdrop[hidden] {
+        display: none;
+      }
+      .modal {
+        width: min(520px, 100%);
+        max-height: min(80vh, 720px);
+        overflow: auto;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 22px;
+        box-shadow: 0 16px 48px rgba(58, 52, 46, 0.18);
+      }
+      .modal h3 {
+        margin: 0 0 8px;
+        font-size: 18px;
+      }
+      .modal p {
+        margin: 0 0 14px;
+        color: var(--ink-soft);
+        font-size: 14px;
+      }
+      .modal-list {
+        margin: 0 0 16px;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #faf7f1;
+        max-height: 220px;
+        overflow: auto;
+        font-size: 14px;
+      }
+      .modal-list li {
+        margin: 0 0 8px;
+      }
+      .modal-list li:last-child {
+        margin-bottom: 0;
+      }
+      .modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        align-items: center;
+        margin-top: 18px;
+      }
+      .modal-actions .spacer {
+        flex: 1;
+      }
+      .modal-step {
+        display: none;
+      }
+      .modal-step.active {
+        display: block;
+      }
+      .purge-warning {
+        color: var(--blush);
+        font-weight: 600;
+      }
+      .purge-confirm-phrase {
+        display: block;
+        width: fit-content;
+        max-width: 100%;
+        margin: 0 0 16px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #e5e7eb;
+        background: #f3f4f6;
+        color: #374151;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.55;
+        word-break: break-word;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+      }
+      .field-gap {
+        margin-bottom: 14px;
+      }
       .stats {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -351,7 +502,10 @@
 
         <div class="toolbar">
           <button class="btn-ghost" id="refreshBtn">刷新</button>
-          <button class="btn-ghost" id="csvBtn">下载 CSV</button>
+          <button class="btn-ghost" id="csvBtn">导出全部数据（.csv）</button>
+          <button class="btn-danger" id="deleteSelectedBtn" hidden>
+            删除选中 (<span id="selectedCount">0</span>)
+          </button>
           <span class="spacer"></span>
           <button class="btn-ghost" id="logoutBtn">退出</button>
         </div>
@@ -362,6 +516,13 @@
           <table>
             <thead>
               <tr>
+                <th class="check-cell">
+                  <input
+                    type="checkbox"
+                    id="selectAllRsvp"
+                    aria-label="全选回执"
+                  />
+                </th>
                 <th>#</th>
                 <th>姓名</th>
                 <th>电话</th>
@@ -376,11 +537,111 @@
           </table>
         </div>
         <div class="empty" id="emptyHint" hidden>暂无回执数据</div>
+
+        <aside class="danger-zone">
+          <h3 class="danger-zone-title">危险操作</h3>
+          <p class="danger-zone-desc muted">
+            以下操作不可恢复，请仅在需要重置全部数据时使用。
+          </p>
+          <button class="btn-danger-subtle" id="purgeBtn" type="button">
+            清空全部数据
+          </button>
+        </aside>
       </section>
+    </div>
+
+    <div class="modal-backdrop" id="deleteModal" hidden>
+      <div class="modal" role="dialog" aria-labelledby="deleteModalTitle">
+        <h3 id="deleteModalTitle">确认删除选中回执？</h3>
+        <p>以下宾客的回执将被永久删除，此操作不可恢复：</p>
+        <ul class="modal-list" id="deleteModalList"></ul>
+        <div class="modal-actions">
+          <button class="btn-ghost" type="button" id="deleteCancelBtn">取消</button>
+          <button class="btn-danger" type="button" id="deleteConfirmBtn">
+            确认删除
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="purgeModal" hidden>
+      <div class="modal" role="dialog" aria-labelledby="purgeModalTitle">
+        <div class="modal-step active" id="purgeStep1">
+          <h3 id="purgeModalTitle">清空全部数据？</h3>
+          <p class="purge-warning">
+            将删除所有宾客回执、访客记录与浏览统计，且无法恢复。
+          </p>
+          <p>请仅在确认需要重置全部数据时继续。</p>
+          <div class="modal-actions">
+            <button class="btn-ghost purge-cancel-btn" type="button">
+              取消清空
+            </button>
+            <span class="spacer"></span>
+            <button class="btn-danger" type="button" id="purgeNextBtn">
+              我已了解，继续
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-step" id="purgeStep2">
+          <h3>再次确认</h3>
+          <p>此操作会清空数据库中的全部婚礼数据，请再次确认。</p>
+          <div class="modal-actions">
+            <button class="btn-ghost purge-cancel-btn" type="button">
+              取消清空
+            </button>
+            <span class="spacer"></span>
+            <button class="btn-ghost" type="button" id="purgeBackBtn">返回</button>
+            <button class="btn-danger" type="button" id="purgeNextBtn2">
+              继续清空
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-step" id="purgeStep3">
+          <h3>输入口令与确认文字</h3>
+          <p>
+            为防止误操作，请输入管理口令，并在下方完整输入以下英文确认句后提交：
+          </p>
+          <code class="purge-confirm-phrase" id="purgeConfirmPhrase"></code>
+          <div class="field-gap">
+            <label for="purgeToken">管理口令</label>
+            <input
+              id="purgeToken"
+              type="password"
+              autocomplete="current-password"
+              placeholder="再次输入管理口令"
+            />
+          </div>
+          <div class="field-gap">
+            <label for="purgeConfirmText">确认文字</label>
+            <input
+              id="purgeConfirmText"
+              type="text"
+              autocomplete="off"
+              placeholder="完整输入上方英文确认句"
+            />
+          </div>
+          <div class="modal-actions">
+            <button class="btn-ghost purge-cancel-btn" type="button">
+              取消清空
+            </button>
+            <span class="spacer"></span>
+            <button class="btn-ghost" type="button" id="purgeBackBtn2">
+              返回
+            </button>
+            <button class="btn-danger" type="button" id="purgeConfirmBtn" disabled>
+              确认清空全部数据
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
       const TOKEN_KEY = "wedding-admin-token";
+      const PURGE_CONFIRM_PHRASE =
+        "I confirm that I want to completely clear everything";
       const $ = (id) => document.getElementById(id);
 
       const guestLabel = {
@@ -439,6 +700,190 @@
               "'": "&#39;",
             })[c],
         );
+      }
+
+      let rsvpRows = [];
+      const selectedIds = new Set();
+
+      function updateSelectionUI() {
+        const count = selectedIds.size;
+        $("selectedCount").textContent = String(count);
+        $("deleteSelectedBtn").hidden = count === 0;
+
+        const visibleIds = rsvpRows.map((row) => row.id);
+        const allSelected =
+          visibleIds.length > 0 &&
+          visibleIds.every((id) => selectedIds.has(id));
+        $("selectAllRsvp").checked = allSelected;
+        $("selectAllRsvp").indeterminate =
+          count > 0 && !allSelected;
+      }
+
+      function toggleRowSelection(id, checked) {
+        if (checked) {
+          selectedIds.add(id);
+        } else {
+          selectedIds.delete(id);
+        }
+        updateSelectionUI();
+        const row = document.querySelector(`tr[data-rsvp-id="${id}"]`);
+        if (row) {
+          row.classList.toggle("row-selected", checked);
+        }
+      }
+
+      function getSelectedRows() {
+        return rsvpRows.filter((row) => selectedIds.has(row.id));
+      }
+
+      function openDeleteModal() {
+        const rows = getSelectedRows();
+        if (!rows.length) return;
+
+        const list = $("deleteModalList");
+        list.innerHTML = rows
+          .map(
+            (row) =>
+              "<li><strong>" +
+              escapeHtml(row.name) +
+              "</strong> · " +
+              escapeHtml(row.phone) +
+              "</li>",
+          )
+          .join("");
+        $("deleteModal").hidden = false;
+      }
+
+      function closeDeleteModal() {
+        $("deleteModal").hidden = true;
+      }
+
+      function setPurgeStep(step) {
+        for (const el of document.querySelectorAll(".modal-step")) {
+          el.classList.remove("active");
+        }
+        $("purgeStep" + step).classList.add("active");
+      }
+
+      function resetPurgeModal() {
+        $("purgeToken").value = "";
+        $("purgeConfirmText").value = "";
+        $("purgeConfirmBtn").disabled = true;
+        $("purgeConfirmPhrase").textContent = PURGE_CONFIRM_PHRASE;
+        setPurgeStep(1);
+      }
+
+      function openPurgeModal() {
+        resetPurgeModal();
+        $("purgeModal").hidden = false;
+      }
+
+      function closePurgeModal() {
+        $("purgeModal").hidden = true;
+        resetPurgeModal();
+      }
+
+      function updatePurgeConfirmState() {
+        const tokenOk = $("purgeToken").value.trim().length > 0;
+        const textOk =
+          $("purgeConfirmText").value.trim() === PURGE_CONFIRM_PHRASE;
+        $("purgeConfirmBtn").disabled = !(tokenOk && textOk);
+      }
+
+      async function deleteSelectedRows() {
+        const token = getToken();
+        if (!token) return showLogin();
+
+        const ids = [...selectedIds];
+        if (!ids.length) return;
+
+        $("deleteConfirmBtn").disabled = true;
+        $("dataMsg").textContent = "正在删除…";
+        try {
+          const res = await fetch("/api/admin/rsvp/delete", {
+            method: "POST",
+            headers: {
+              Authorization: "Bearer " + token,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ ids }),
+          });
+
+          if (res.status === 401) {
+            clearToken();
+            closeDeleteModal();
+            return showLogin("口令不正确，请重试");
+          }
+
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            throw new Error(data.error || "HTTP " + res.status);
+          }
+
+          for (const id of ids) {
+            selectedIds.delete(id);
+          }
+          closeDeleteModal();
+          await loadData();
+          $("dataMsg").textContent =
+            "已删除 " + (data.deletedCount || ids.length) + " 条回执";
+        } catch (err) {
+          $("dataMsg").textContent = "删除失败：" + err.message;
+        } finally {
+          $("deleteConfirmBtn").disabled = false;
+        }
+      }
+
+      async function purgeAllData() {
+        const token = getToken();
+        if (!token) return showLogin();
+
+        const typedToken = $("purgeToken").value.trim();
+        const confirmText = $("purgeConfirmText").value.trim();
+        if (!typedToken || confirmText !== PURGE_CONFIRM_PHRASE) {
+          $("dataMsg").textContent =
+            "请填写管理口令并完整输入英文确认句";
+          return;
+        }
+
+        $("purgeConfirmBtn").disabled = true;
+        $("dataMsg").textContent = "正在清空全部数据…";
+        try {
+          const res = await fetch("/api/admin/purge", {
+            method: "POST",
+            headers: {
+              Authorization: "Bearer " + token,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ token: typedToken, confirmText }),
+          });
+
+          if (res.status === 401) {
+            const data = await res.json().catch(() => ({}));
+            if (data.error === "bad_token") {
+              $("dataMsg").textContent = "管理口令不正确，请重新输入";
+              updatePurgeConfirmState();
+              return;
+            }
+            clearToken();
+            closePurgeModal();
+            return showLogin("口令不正确，请重试");
+          }
+
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            throw new Error(data.error || "HTTP " + res.status);
+          }
+
+          selectedIds.clear();
+          closePurgeModal();
+          await loadData();
+          $("dataMsg").textContent = "全部数据已清空";
+        } catch (err) {
+          $("dataMsg").textContent = "清空失败：" + err.message;
+        } finally {
+          updatePurgeConfirmState();
+        }
       }
 
       async function loadData() {
@@ -620,6 +1065,14 @@
       }
 
       function renderData(data) {
+        rsvpRows = data.rows || [];
+        const validIds = new Set(rsvpRows.map((row) => row.id));
+        for (const id of [...selectedIds]) {
+          if (!validIds.has(id)) {
+            selectedIds.delete(id);
+          }
+        }
+
         $("sTotal").textContent = data.count;
         $("sAttend").textContent = data.attendingCount;
         $("sAbsent").textContent = data.absentCount;
@@ -629,13 +1082,25 @@
 
         const tbody = $("tbody");
         tbody.innerHTML = "";
-        $("emptyHint").hidden = data.rows.length > 0;
+        $("emptyHint").hidden = rsvpRows.length > 0;
+        $("selectAllRsvp").disabled = rsvpRows.length === 0;
 
-        for (const r of data.rows) {
+        for (const r of rsvpRows) {
           const tr = document.createElement("tr");
+          tr.dataset.rsvpId = String(r.id);
+          if (selectedIds.has(r.id)) {
+            tr.classList.add("row-selected");
+          }
+
           const attend = r.attendance === "attend";
           tr.innerHTML =
-            "<td>" +
+            '<td class="check-cell"><input type="checkbox" aria-label="选择 ' +
+            escapeHtml(r.name) +
+            '" data-select-id="' +
+            r.id +
+            '"' +
+            (selectedIds.has(r.id) ? " checked" : "") +
+            " /></td><td>" +
             r.id +
             "</td><td>" +
             escapeHtml(r.name) +
@@ -654,8 +1119,19 @@
             "</td><td>" +
             formatTime(r.created_at) +
             "</td>";
+
+          const checkbox = tr.querySelector('input[type="checkbox"]');
+          checkbox.addEventListener("click", (event) => {
+            event.stopPropagation();
+          });
+          checkbox.addEventListener("change", (event) => {
+            toggleRowSelection(r.id, event.target.checked);
+          });
+
           tbody.appendChild(tr);
         }
+
+        updateSelectionUI();
       }
 
       async function downloadCsv() {
@@ -694,12 +1170,62 @@
         loadData();
       }
 
+      function bindPurgePhraseGuard() {
+        const phraseEl = $("purgeConfirmPhrase");
+        phraseEl.addEventListener("copy", (event) => event.preventDefault());
+        phraseEl.addEventListener("cut", (event) => event.preventDefault());
+        phraseEl.addEventListener("contextmenu", (event) => event.preventDefault());
+        phraseEl.addEventListener("selectstart", (event) => event.preventDefault());
+      }
+
+      bindPurgePhraseGuard();
+
       $("loginBtn").addEventListener("click", doLogin);
       $("token").addEventListener("keydown", (e) => {
         if (e.key === "Enter") doLogin();
       });
       $("refreshBtn").addEventListener("click", loadData);
       $("csvBtn").addEventListener("click", downloadCsv);
+      $("deleteSelectedBtn").addEventListener("click", openDeleteModal);
+      $("deleteCancelBtn").addEventListener("click", closeDeleteModal);
+      $("deleteConfirmBtn").addEventListener("click", deleteSelectedRows);
+      $("deleteModal").addEventListener("click", (event) => {
+        if (event.target === $("deleteModal")) {
+          closeDeleteModal();
+        }
+      });
+      $("selectAllRsvp").addEventListener("change", (event) => {
+        const checked = event.target.checked;
+        for (const row of rsvpRows) {
+          if (checked) {
+            selectedIds.add(row.id);
+          } else {
+            selectedIds.delete(row.id);
+          }
+        }
+        for (const tr of $("tbody").querySelectorAll("tr[data-rsvp-id]")) {
+          const checkbox = tr.querySelector('input[type="checkbox"]');
+          checkbox.checked = checked;
+          tr.classList.toggle("row-selected", checked);
+        }
+        updateSelectionUI();
+      });
+      $("purgeBtn").addEventListener("click", openPurgeModal);
+      for (const btn of document.querySelectorAll(".purge-cancel-btn")) {
+        btn.addEventListener("click", closePurgeModal);
+      }
+      $("purgeBackBtn").addEventListener("click", () => setPurgeStep(1));
+      $("purgeBackBtn2").addEventListener("click", () => setPurgeStep(2));
+      $("purgeNextBtn").addEventListener("click", () => setPurgeStep(2));
+      $("purgeNextBtn2").addEventListener("click", () => setPurgeStep(3));
+      $("purgeToken").addEventListener("input", updatePurgeConfirmState);
+      $("purgeConfirmText").addEventListener("input", updatePurgeConfirmState);
+      $("purgeConfirmBtn").addEventListener("click", purgeAllData);
+      $("purgeModal").addEventListener("click", (event) => {
+        if (event.target === $("purgeModal")) {
+          closePurgeModal();
+        }
+      });
       $("logoutBtn").addEventListener("click", () => {
         clearToken();
         showLogin("已退出");
