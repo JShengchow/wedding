@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { MotionSection, motionItem } from "../components/MotionSection";
-import { SCHEDULE } from "../content/wedding";
+import { SCHEDULE, SCHEDULE_REMINDER } from "../content/wedding";
 
 export function Schedule() {
   return (
@@ -35,12 +35,15 @@ export function Schedule() {
           />
           {SCHEDULE.map((item) => (
             <motion.li
-              key={item.time}
+              key={item.title}
               variants={motionItem}
               className="relative flex items-start gap-5"
             >
-              <p className="text-display w-14 shrink-0 text-right text-2xl font-light text-champagne-700 md:w-20 md:text-3xl">
-                {item.time}
+              <p
+                aria-hidden={item.hideTime || undefined}
+                className="text-display w-14 shrink-0 text-right text-2xl font-light text-champagne-700 md:w-20 md:text-3xl"
+              >
+                {item.hideTime ? "" : item.time}
               </p>
               <span
                 aria-hidden="true"
@@ -60,6 +63,14 @@ export function Schedule() {
             </motion.li>
           ))}
         </ol>
+
+        <div className="mt-8 h-px gold-line" />
+
+        <div className="mt-8 text-center text-sm leading-8 text-ink-soft md:text-base">
+          {SCHEDULE_REMINDER.map((line) => (
+            <p key={line}>{line}</p>
+          ))}
+        </div>
       </motion.div>
     </MotionSection>
   );

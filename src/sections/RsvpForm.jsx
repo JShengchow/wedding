@@ -19,7 +19,16 @@ export function RsvpForm() {
   const rsvp = useRsvpForm({
     onSubmitted: () => {
       setGlobalSubmitted(true);
+      const fromModal = modalOpen;
       closeModal();
+      if (fromModal) {
+        window.setTimeout(() => {
+          sectionRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }, 80);
+      }
     },
   });
 

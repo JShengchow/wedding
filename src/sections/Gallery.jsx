@@ -1,10 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import {
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
-import { MemoryMap } from "../components/MemoryMap";
 import { MotionSection, motionItem, scatterItem } from "../components/MotionSection";
 import { FashiGallery } from "./FashiGallery";
 import { carouselPhotos, photoWallPhotos, polaroidPhotos, senxiPhotos } from "../lib/photos";
@@ -140,7 +135,6 @@ const POLAROID_EXPANDED_TRANSFORMS = [
 ];
 
 export function Gallery() {
-  const [showMemoryWall, setShowMemoryWall] = useState(false);
   const [polaroidsExpanded, setPolaroidsExpanded] = useState(
     () => typeof window !== "undefined" && !("IntersectionObserver" in window),
   );
@@ -491,59 +485,6 @@ export function Gallery() {
         </motion.article>
 
         <FashiGallery />
-
-        <motion.article
-          variants={motionItem}
-          className="rounded-[30px] border border-champagne-200/70 bg-ivory-50/90 p-4 shadow-soft md:p-6"
-        >
-          <button
-            type="button"
-            onClick={() => setShowMemoryWall((prev) => !prev)}
-            aria-expanded={showMemoryWall}
-            aria-controls="memory-curve-panel"
-            className="group w-full rounded-[18px] border border-champagne-200/80 bg-gradient-to-r from-white/85 via-ivory-50/90 to-white/85 px-4 py-3 text-left shadow-sm transition hover:border-champagne-300/90"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-eyebrow text-[10px] text-champagne-600 md:text-[11px]">
-                  Love Map · Travel + Home
-                </p>
-                <p className="mt-1 text-sm text-ink md:text-[15px]">
-                  {showMemoryWall
-                    ? "城市坐标正在闪闪发光"
-                    : "点亮中国地图，看看我们走过的城市"}
-                </p>
-              </div>
-              <span className="grid h-8 w-8 place-items-center rounded-full border border-champagne-200 bg-white/80 text-champagne-700 transition group-hover:border-champagne-300">
-                {showMemoryWall ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </span>
-            </div>
-            <span className="mt-3 block h-1.5 w-full overflow-hidden rounded-full bg-champagne-100/80">
-              <span
-                className={`block h-full rounded-full bg-gradient-to-r from-champagne-300 via-blush-300 to-champagne-400 transition-all duration-500 ${
-                  showMemoryWall ? "w-full" : "w-1/3"
-                }`}
-              />
-            </span>
-          </button>
-
-          <div
-            id="memory-curve-panel"
-            className={`grid transition-all duration-500 ease-out ${
-              showMemoryWall
-                ? "mt-5 grid-rows-[1fr] opacity-100"
-                : "mt-0 grid-rows-[0fr] opacity-0"
-            }`}
-          >
-            <div className="overflow-hidden">
-              {showMemoryWall ? <MemoryMap /> : null}
-            </div>
-          </div>
-        </motion.article>
       </div>
 
     </MotionSection>

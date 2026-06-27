@@ -1,4 +1,5 @@
 import { AlertCircle, Heart, LoaderCircle } from "lucide-react";
+import { RSVP_SUCCESS_REMINDER } from "../content/wedding";
 import { Field } from "./Field";
 import { Select } from "./Select";
 
@@ -165,10 +166,13 @@ export function RsvpSuccessBody({ onReset }) {
         感谢您的回执
       </h3>
       <p className="mx-auto max-w-md text-sm leading-8 text-ink-soft md:text-base">
-        我们已经收到您的出席信息，
-        <br className="md:hidden" />
-        期待在这个夏日午后与您相见。
+        我们已经收到您的出席信息。
       </p>
+      <div className="mx-auto mt-4 max-w-md text-sm leading-8 text-ink-soft md:text-base">
+        {RSVP_SUCCESS_REMINDER.map((line) => (
+          <p key={line}>{line}</p>
+        ))}
+      </div>
       {onReset ? (
         <button
           type="button"
