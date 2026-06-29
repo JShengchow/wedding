@@ -456,6 +456,14 @@
             <div class="num" id="vMusic">0</div>
             <div class="lbl">音乐进入</div>
           </div>
+          <div class="stat">
+            <div class="num" id="vAvgDuration">—</div>
+            <div class="lbl">平均单次停留</div>
+          </div>
+          <div class="stat">
+            <div class="num" id="vTotalDuration">—</div>
+            <div class="lbl">累计停留时长</div>
+          </div>
         </div>
 
         <div class="breakdown" id="themeBreakdown"></div>
@@ -467,6 +475,7 @@
               <tr>
                 <th>访客</th>
                 <th>次数</th>
+                <th>累计停留</th>
                 <th>最近色系</th>
                 <th>最近进入</th>
                 <th>来源</th>
@@ -953,6 +962,26 @@
         );
       }
 
+      function formatDuration(seconds) {
+        const value = Number(seconds);
+        if (!Number.isFinite(value) || value <= 0) {
+          return "—";
+        }
+        if (value < 60) {
+          return value + " 秒";
+        }
+        const minutes = Math.floor(value / 60);
+        const remainSeconds = value % 60;
+        if (minutes < 60) {
+          return remainSeconds
+            ? minutes + " 分 " + remainSeconds + " 秒"
+            : minutes + " 分";
+        }
+        const hours = Math.floor(minutes / 60);
+        const remainMinutes = minutes % 60;
+        return remainMinutes ? hours + " 时 " + remainMinutes + " 分" : hours + " 时";
+      }
+
       function renderBreakdown(containerId, stats, labels, prefix) {
         const container = $(containerId);
         container.innerHTML = "";
@@ -981,6 +1010,13 @@
         $("vUnique").textContent = summary.uniqueVisitors || 0;
         $("vIdentified").textContent = summary.identifiedVisitors || 0;
         $("vMusic").textContent = summary.audioStats?.music || 0;
+        $("vAvgDuration").textContent =
+          summary.trackedVisits > 0
+            ? formatDuration(summary.avgVisitDurationSeconds)
+            : "—";
+        $("vTotalDuration").textContent = formatDuration(
+          summary.totalDurationSeconds,
+        );
 
         renderBreakdown(
           "themeBreakdown",
@@ -1012,6 +1048,8 @@
             "</td><td>" +
             visitor.visitCount +
             "</td><td>" +
+            escapeHtml(formatDuration(visitor.totalDurationSeconds)) +
+            "</td><td>" +
             escapeHtml(themeLabel[visitor.lastTheme] || visitor.lastTheme || "—") +
             "</td><td>" +
             escapeHtml(audioLabel[visitor.lastAudioMode] || visitor.lastAudioMode || "—") +
@@ -1024,7 +1062,7 @@
           const timelineRow = document.createElement("tr");
           timelineRow.hidden = true;
           const timelineCell = document.createElement("td");
-          timelineCell.colSpan = 6;
+          timelineCell.colSpan = 7;
 
           const visits = visitor.visits || [];
           if (!visits.length) {
@@ -1041,11 +1079,13 @@
                 "</td><td>" +
                 escapeHtml(audioLabel[visit.audioMode] || visit.audioMode) +
                 "</td><td>" +
+                escapeHtml(formatDuration(visit.durationSeconds)) +
+                "</td><td>" +
                 formatIpSource(visit.ip, visit.ipLocation) +
                 "</td></tr>";
             }
             timelineCell.innerHTML =
-              '<div class="visit-timeline"><table><thead><tr><th>时间</th><th>色系</th><th>进入方式</th><th>IP / 地区</th></tr></thead><tbody>' +
+              '<div class="visit-timeline"><table><thead><tr><th>时间</th><th>色系</th><th>进入方式</th><th>停留</th><th>IP / 地区</th></tr></thead><tbody>' +
               rows +
               "</tbody></table></div>";
           }

@@ -97,6 +97,23 @@ function migrateAnalyticsTables() {
 
 migrateAnalyticsTables();
 
+function migrateDurationColumns() {
+  const visitCols = db.prepare("PRAGMA table_info(wedding_visit)").all();
+  if (!visitCols.some((col) => col.name === "duration_seconds")) {
+    db.exec("ALTER TABLE wedding_visit ADD COLUMN duration_seconds INTEGER");
+  }
+
+  const visitorCols = db.prepare("PRAGMA table_info(wedding_visitor)").all();
+  if (!visitorCols.some((col) => col.name === "total_duration_seconds")) {
+    db.exec(`
+      ALTER TABLE wedding_visitor
+      ADD COLUMN total_duration_seconds INTEGER NOT NULL DEFAULT 0
+    `);
+  }
+}
+
+migrateDurationColumns();
+
 const insertStmt = db.prepare(`
   INSERT INTO wedding_rsvp (name, phone, attendance, guests, message, ip, ua)
   VALUES (@name, @phone, @attendance, @guests, @message, @ip, @ua)
@@ -230,6 +247,7 @@ const UUID_RE =
 
 const SUBMIT_THROTTLE_MS = 5 * 1000;
 const VISIT_DEDUPE_MS = 3 * 1000;
+const MAX_VISIT_DURATION_SECONDS = 6 * 60 * 60;
 const lastIpSubmitAt = new Map();
 const lastIpVisitAt = new Map();
 const lastVisitorVisitAt = new Map();
@@ -312,21 +330,28 @@ const recordVisitTx = db.transaction(
       `).run({ visitorId, ts });
     }
 
-    db.prepare(`
+    const insertResult = db
+      .prepare(`
       INSERT INTO wedding_visit (visitor_id, theme, audio_mode, ip, ua, created_at)
       VALUES (@visitorId, @theme, @audioMode, @ip, @ua, @ts)
-    `).run({
-      visitorId,
-      theme,
-      audioMode,
-      ip,
-      ua,
-      ts,
-    });
+    `)
+      .run({
+        visitorId,
+        theme,
+        audioMode,
+        ip,
+        ua,
+        ts,
+      });
 
-    return db
+    const visitCount = db
       .prepare("SELECT visit_count FROM wedding_visitor WHERE id = ?")
       .get(visitorId)?.visit_count;
+
+    return {
+      visitCount,
+      visitId: Number(insertResult.lastInsertRowid),
+    };
   },
 );
 
@@ -448,7 +473,7 @@ app.post("/api/visit", (req, res) => {
   }
 
   try {
-    const visitCount = recordVisitTx({
+    const result = recordVisitTx({
       visitorId,
       theme,
       audioMode,
@@ -457,9 +482,88 @@ app.post("/api/visit", (req, res) => {
     });
     lastIpVisitAt.set(ip, now);
     lastVisitorVisitAt.set(visitorId, now);
-    res.json({ ok: true, visitCount });
+    res.json({
+      ok: true,
+      visitCount: result.visitCount,
+      visitId: result.visitId,
+    });
   } catch (err) {
     console.error("[visit] insert failed", err);
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+const recordDurationTx = db.transaction(
+  ({ visitorId, visitId, durationSeconds }) => {
+    const visit = db
+      .prepare(`
+        SELECT id, visitor_id, duration_seconds
+        FROM wedding_visit
+        WHERE id = @visitId AND visitor_id = @visitorId
+      `)
+      .get({ visitId, visitorId });
+
+    if (!visit) {
+      return { error: "not_found" };
+    }
+
+    const capped = Math.min(
+      MAX_VISIT_DURATION_SECONDS,
+      Math.max(1, Math.floor(durationSeconds)),
+    );
+    const previous = visit.duration_seconds ?? 0;
+    if (capped <= previous) {
+      return { ok: true, updated: false, durationSeconds: previous };
+    }
+
+    const delta = capped - previous;
+    db.prepare(`
+      UPDATE wedding_visit
+      SET duration_seconds = @durationSeconds
+      WHERE id = @visitId
+    `).run({ visitId, durationSeconds: capped });
+    db.prepare(`
+      UPDATE wedding_visitor
+      SET total_duration_seconds = total_duration_seconds + @delta
+      WHERE id = @visitorId
+    `).run({ visitorId, delta });
+
+    return { ok: true, updated: true, durationSeconds: capped };
+  },
+);
+
+app.post("/api/visit/duration", (req, res) => {
+  if (req.body && typeof req.body.hp === "string" && req.body.hp.length > 0) {
+    return res.json({ ok: true });
+  }
+
+  const visitorId =
+    typeof req.body?.visitorId === "string" ? req.body.visitorId.trim() : "";
+  const visitId = Number(req.body?.visitId);
+  const durationSeconds = Number(req.body?.durationSeconds);
+
+  if (!isUuid(visitorId)) {
+    return res.status(400).json({ error: "bad_visitor_id" });
+  }
+  if (!Number.isInteger(visitId) || visitId <= 0) {
+    return res.status(400).json({ error: "bad_visit_id" });
+  }
+  if (
+    !Number.isFinite(durationSeconds) ||
+    durationSeconds < 1 ||
+    durationSeconds > MAX_VISIT_DURATION_SECONDS
+  ) {
+    return res.status(400).json({ error: "bad_duration" });
+  }
+
+  try {
+    const result = recordDurationTx({ visitorId, visitId, durationSeconds });
+    if (result.error) {
+      return res.status(404).json({ error: result.error });
+    }
+    res.json(result);
+  } catch (err) {
+    console.error("[visit] duration update failed", err);
     res.status(500).json({ error: "server_error" });
   }
 });
@@ -519,6 +623,16 @@ app.get("/api/admin/analytics", (req, res) => {
     )
     .get().count;
 
+  const durationStats = db
+    .prepare(`
+      SELECT
+        AVG(duration_seconds) AS avgVisitDuration,
+        SUM(duration_seconds) AS totalDurationSeconds,
+        COUNT(CASE WHEN duration_seconds IS NOT NULL THEN 1 END) AS trackedVisits
+      FROM wedding_visit
+    `)
+    .get();
+
   const themeStats = Object.fromEntries(
     db
       .prepare(
@@ -538,7 +652,14 @@ app.get("/api/admin/analytics", (req, res) => {
 
   const visitorRows = db
     .prepare(`
-      SELECT id, rsvp_name, rsvp_phone, visit_count, first_seen_at, last_seen_at
+      SELECT
+        id,
+        rsvp_name,
+        rsvp_phone,
+        visit_count,
+        first_seen_at,
+        last_seen_at,
+        total_duration_seconds
       FROM wedding_visitor
       ORDER BY visit_count DESC, last_seen_at DESC, id ASC
     `)
@@ -546,7 +667,7 @@ app.get("/api/admin/analytics", (req, res) => {
 
   const visitRows = db
     .prepare(`
-      SELECT id, visitor_id, theme, audio_mode, ip, created_at
+      SELECT id, visitor_id, theme, audio_mode, ip, created_at, duration_seconds
       FROM wedding_visit
       ORDER BY id DESC
     `)
@@ -563,6 +684,7 @@ app.get("/api/admin/analytics", (req, res) => {
       theme: visit.theme,
       audioMode: visit.audio_mode,
       createdAt: visit.created_at,
+      durationSeconds: visit.duration_seconds,
       ip: ipInfo.ip,
       ipLocation: ipInfo.location,
     });
@@ -581,12 +703,14 @@ app.get("/api/admin/analytics", (req, res) => {
       rsvpName: row.rsvp_name,
       rsvpPhone: row.rsvp_phone,
       visitCount: row.visit_count,
+      totalDurationSeconds: row.total_duration_seconds || 0,
       firstSeenAt: row.first_seen_at,
       lastSeenAt: row.last_seen_at,
       lastTheme: latest?.theme || null,
       lastAudioMode: latest?.audioMode || null,
       lastIp: latest?.ip || "",
       lastIpLocation: latest?.ipLocation || "",
+      lastDurationSeconds: latest?.durationSeconds ?? null,
       visits,
     };
   });
@@ -598,6 +722,9 @@ app.get("/api/admin/analytics", (req, res) => {
       identifiedVisitors,
       themeStats,
       audioStats,
+      avgVisitDurationSeconds: Math.round(durationStats.avgVisitDuration || 0),
+      totalDurationSeconds: durationStats.totalDurationSeconds || 0,
+      trackedVisits: durationStats.trackedVisits || 0,
     },
     visitors,
   });
