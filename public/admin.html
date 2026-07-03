@@ -403,6 +403,31 @@
       .section-gap {
         height: 8px;
       }
+      .sort-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      .sort-btn {
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink-soft);
+        border-radius: 999px;
+        padding: 6px 14px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .sort-btn:hover {
+        border-color: var(--champagne);
+      }
+      .sort-btn.active {
+        border-color: var(--champagne);
+        background: #faf4ea;
+        color: var(--champagne-dark);
+        font-weight: 600;
+      }
       @media (max-width: 560px) {
         .stats {
           grid-template-columns: repeat(2, 1fr);
@@ -468,6 +493,16 @@
 
         <div class="breakdown" id="themeBreakdown"></div>
         <div class="breakdown" id="audioBreakdown"></div>
+
+        <div class="sort-bar" id="visitorSortBar">
+          <span class="muted">排序：</span>
+          <button type="button" class="sort-btn active" data-visitor-sort="count">
+            按访问次数
+          </button>
+          <button type="button" class="sort-btn" data-visitor-sort="recent">
+            按最近访问
+          </button>
+        </div>
 
         <div class="table-scroll">
           <table>
@@ -649,6 +684,7 @@
 
     <script>
       const TOKEN_KEY = "wedding-admin-token";
+      const VISITOR_SORT_KEY = "wedding-admin-visitor-sort";
       const PURGE_CONFIRM_PHRASE =
         "I confirm that I want to completely clear everything";
       const $ = (id) => document.getElementById(id);
@@ -713,6 +749,9 @@
 
       let rsvpRows = [];
       const selectedIds = new Set();
+      let analyticsSnapshot = null;
+      let visitorSortMode =
+        localStorage.getItem(VISITOR_SORT_KEY) === "recent" ? "recent" : "count";
 
       function updateSelectionUI() {
         const count = selectedIds.size;
@@ -962,6 +1001,54 @@
         );
       }
 
+      function parseTimestamp(value) {
+        if (!value) return 0;
+        const raw = String(value).trim();
+        let date;
+        if (raw.includes("T")) {
+          date = new Date(raw);
+        } else {
+          date = new Date(raw.replace(" ", "T") + "Z");
+        }
+        return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+      }
+
+      function sortVisitors(visitors, mode) {
+        const list = [...visitors];
+        if (mode === "recent") {
+          return list.sort((a, b) => {
+            const diff =
+              parseTimestamp(b.lastSeenAt) - parseTimestamp(a.lastSeenAt);
+            if (diff !== 0) return diff;
+            return b.visitCount - a.visitCount;
+          });
+        }
+        return list.sort((a, b) => {
+          const diff = b.visitCount - a.visitCount;
+          if (diff !== 0) return diff;
+          return parseTimestamp(b.lastSeenAt) - parseTimestamp(a.lastSeenAt);
+        });
+      }
+
+      function updateVisitorSortButtons() {
+        for (const btn of document.querySelectorAll("[data-visitor-sort]")) {
+          btn.classList.toggle(
+            "active",
+            btn.dataset.visitorSort === visitorSortMode,
+          );
+        }
+      }
+
+      function setVisitorSort(mode) {
+        if (mode !== "count" && mode !== "recent") return;
+        visitorSortMode = mode;
+        localStorage.setItem(VISITOR_SORT_KEY, mode);
+        updateVisitorSortButtons();
+        if (analyticsSnapshot) {
+          renderVisitorTable(analyticsSnapshot.visitors || []);
+        }
+      }
+
       function formatDuration(seconds) {
         const value = Number(seconds);
         if (!Number.isFinite(value) || value <= 0) {
@@ -1005,6 +1092,7 @@
       }
 
       function renderAnalytics(data) {
+        analyticsSnapshot = data;
         const summary = data.summary || {};
         $("vTotal").textContent = summary.totalVisits || 0;
         $("vUnique").textContent = summary.uniqueVisitors || 0;
@@ -1031,12 +1119,17 @@
           "进入 · ",
         );
 
+        updateVisitorSortButtons();
+        renderVisitorTable(data.visitors || []);
+      }
+
+      function renderVisitorTable(visitors) {
         const tbody = $("visitorBody");
         tbody.innerHTML = "";
-        const visitors = data.visitors || [];
-        $("visitorEmpty").hidden = visitors.length > 0;
+        const sorted = sortVisitors(visitors, visitorSortMode);
+        $("visitorEmpty").hidden = sorted.length > 0;
 
-        for (const visitor of visitors) {
+        for (const visitor of sorted) {
           const mainRow = document.createElement("tr");
           mainRow.className = "visitor-main";
           mainRow.innerHTML =
@@ -1225,6 +1318,11 @@
         if (e.key === "Enter") doLogin();
       });
       $("refreshBtn").addEventListener("click", loadData);
+      for (const btn of document.querySelectorAll("[data-visitor-sort]")) {
+        btn.addEventListener("click", () =>
+          setVisitorSort(btn.dataset.visitorSort),
+        );
+      }
       $("csvBtn").addEventListener("click", downloadCsv);
       $("deleteSelectedBtn").addEventListener("click", openDeleteModal);
       $("deleteCancelBtn").addEventListener("click", closeDeleteModal);
